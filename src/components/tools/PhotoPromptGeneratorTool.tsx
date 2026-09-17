@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, DragEvent, ChangeEvent } from 'react';
-import { Camera, Image as ImageIcon, Sparkles, Copy, Check, Loader2, AlertCircle, RefreshCw, Wand2, Sliders, FileText, Cpu, Layers, Share2, Eye, Download, ChevronDown, ChevronUp, Zap, ShieldCheck } from 'lucide-react';
+import { Camera, Image as ImageIcon, Sparkles, Copy, Check, Loader2, AlertCircle, RefreshCw, Wand2, Sliders, FileText, Cpu, Layers, Share2, Eye, Download, ChevronDown, ChevronUp, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Markdown from 'react-markdown';
 import { getAntiLimitHeaders } from '../../lib/antiLimit';
@@ -173,7 +173,6 @@ export default function PhotoPromptGeneratorTool({
   const [aspectRatio, setAspectRatio] = useState<string>(initialAspectRatio || '--ar 9:16');
 
   // State for generation
-  const [selectedModel, setSelectedModel] = useState<string>('gemini-3.8-flash');
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [generatedPrompt, setGeneratedPrompt] = useState<string | null>(null);
   const [activeModelUsed, setActiveModelUsed] = useState<string | null>(null);
@@ -354,7 +353,7 @@ export default function PhotoPromptGeneratorTool({
         body: JSON.stringify({
           mimeType,
           base64Data,
-          model: selectedModel,
+          model: 'auto',
           targetGenerator: effectiveGen,
           photoStyle: effectiveStyle,
           aspectRatio: effectiveAr,
@@ -375,7 +374,7 @@ export default function PhotoPromptGeneratorTool({
       }
 
       setGeneratedPrompt(data.prompt);
-      setActiveModelUsed(data.modelUsed || selectedModel);
+      setActiveModelUsed(data.modelUsed || 'Auto-Routing');
       setTierUsed(data.tierUsed || null);
       setLatencyMs(data.latencyMs || null);
 
@@ -680,49 +679,8 @@ ${c.prompt}
           />
         </div>
 
-        {/* Style, Model & Aspect Ratio Settings */}
+        {/* Style & Aspect Ratio Settings */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-slate-100">
-          {/* AI Model Routing */}
-          <div className="space-y-2 sm:col-span-2">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                <Cpu className="w-3.5 h-3.5 text-[#5b50e5]" /> Model AI & Routing API
-              </label>
-              <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-semibold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/60">
-                <ShieldCheck className="w-3 h-3" />
-                <span>Anti-Limit Auto Routing Aktif</span>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              {[
-                { id: 'gemini-3.8-flash', name: 'Gemini 3.8 Flash', tag: 'Flagship Vision', desc: 'Rekomendasi - Tercepat & Analisis Akurat' },
-                { id: 'gemini-3.1-flash-lite', name: 'Gemini 3.1 Flash Lite', tag: 'High Resilient', desc: 'Resisten Kuota & Kecepatan Tinggi' },
-                { id: 'gemini-3.1-pro-preview', name: 'Gemini 3.1 Pro', tag: 'Deep Vision', desc: 'Analisis Detail & Ekstrem' },
-              ].map((m) => (
-                <button
-                  type="button"
-                  key={m.id}
-                  onClick={() => setSelectedModel(m.id)}
-                  className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
-                    selectedModel === m.id
-                      ? 'bg-indigo-50/70 border-[#5b50e5] shadow-xs'
-                      : 'bg-white border-slate-200 hover:border-slate-300'
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-1 mb-1">
-                    <span className="text-xs font-bold text-slate-900">{m.name}</span>
-                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
-                      selectedModel === m.id ? 'bg-[#5b50e5] text-white' : 'bg-slate-100 text-slate-600'
-                    }`}>
-                      {m.tag}
-                    </span>
-                  </div>
-                  <span className="text-[10px] text-slate-500 leading-tight">{m.desc}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
           {/* Style Preset */}
           <div className="space-y-2">
             <label className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">

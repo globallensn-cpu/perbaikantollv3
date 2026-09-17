@@ -1323,7 +1323,7 @@ ${promptText}`
       status: 'generating',
       category: req.body.category || 'umum',
       topic: req.body.photoStyle ? `Style: ${req.body.photoStyle}` : 'Photo Analysis',
-      modelUsed: req.body.model || 'gemini-3.8-flash',
+      modelUsed: req.body.model && req.body.model !== 'auto' ? req.body.model : 'Auto-Routing (Anti-Limit)',
       startedAt: new Date().toISOString(),
       updatedAt: Date.now(),
       ip: clientIp,
@@ -1364,12 +1364,13 @@ ${promptText}`
         return res.status(400).json({ error: 'Data gambar/teks dan tipe MIME diperlukan' });
       }
 
-      // Model Routing: Support explicit selection or cascading fallback (defaulting to flagship gemini-3.8-flash)
-      const isUserExplicitChoice = Boolean(model && typeof model === 'string' && model.trim());
-      const userSelectedModel = normalizeGeminiModel(model || 'gemini-3.8-flash');
+      // Model Routing: Support explicit selection or cascading auto-routing fallback
+      const isUserExplicitChoice = Boolean(model && typeof model === 'string' && model.trim() && model !== 'auto');
+      const userSelectedModel = (!model || model === 'auto') ? undefined : normalizeGeminiModel(model);
 
       if (useCache) {
-        const cacheInput = `photo_${mimeType}_${base64Data.slice(0, 500)}_${base64Data.length}_${userSelectedModel}_${targetGenerator}_${photoStyle}_${aspectRatio}_${negativePrompt || ''}_${referenceImageBase64 ? referenceImageBase64.slice(0,500) : ''}`;
+        const cacheModelId = userSelectedModel || 'auto_routed';
+        const cacheInput = `photo_${mimeType}_${base64Data.slice(0, 500)}_${base64Data.length}_${cacheModelId}_${targetGenerator}_${photoStyle}_${aspectRatio}_${negativePrompt || ''}_${referenceImageBase64 ? referenceImageBase64.slice(0,500) : ''}`;
         const cacheKey = crypto.createHash('sha256').update(cacheInput).digest('hex');
         const cached = promptResponseCache.get(cacheKey);
 
@@ -1594,7 +1595,8 @@ JIKA MULTI-KLIP (BATCH CLIPS):
       }, 120000);
 
       if (useCache) {
-        const cacheInput = `photo_${mimeType}_${base64Data.slice(0, 500)}_${base64Data.length}_${userSelectedModel}_${targetGenerator}_${photoStyle}_${aspectRatio}_${negativePrompt || ''}_${referenceImageBase64 ? referenceImageBase64.slice(0,500) : ''}`;
+        const cacheModelId = userSelectedModel || 'auto_routed';
+        const cacheInput = `photo_${mimeType}_${base64Data.slice(0, 500)}_${base64Data.length}_${cacheModelId}_${targetGenerator}_${photoStyle}_${aspectRatio}_${negativePrompt || ''}_${referenceImageBase64 ? referenceImageBase64.slice(0,500) : ''}`;
         const cacheKey = crypto.createHash('sha256').update(cacheInput).digest('hex');
         promptResponseCache.set(cacheKey, {
           timestamp: Date.now(),
