@@ -1,0 +1,8 @@
+{
+  "name": "perbaikan tolls v2",
+  "description": "tes 2",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

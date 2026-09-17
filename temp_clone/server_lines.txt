@@ -1,0 +1,3000 @@
+     1	import express from 'express';
+     2	import { logger } from './src/utils/logger';
+     3	
+     4	import path from 'path';
+     5	import crypto from 'crypto';
+     6	import fs from 'fs';
+     7	import { GoogleGenAI } from '@google/genai';
+     8	import cron from 'node-cron';
+     9	import { runAutoAgentFactory } from './src/agents/agentAutoAgentFactory';
+    10	import { analyzeUserGrowth } from './src/agents/agentUserGrowthAnalyst';
+    11	import { optimizeCostAndTiers } from './src/agents/agentCostTierOptimizer';
+    12	import { detectAbuseAndAnomalies } from './src/agents/agentAbuseAnomalyDetector';
+    13	import { requireAuth, requireAdminRole } from './src/middleware/auth';
+    14	import { getModelRoutingPlan, MODEL_TIERS, getInitialTierForTask } from './src/routing/modelRouter';
+    15	import { getApiKeys, saveApiKeys } from './src/lib/admin/apiKeys';
+    16	import { buildQueryCouncilPrompt, runIndonesianQueryCouncil } from './src/agents/agentIndonesianQueryCouncil';
+    17	import {
+    18	  initDbSeed,
+    19	  dbGetClients,
+    20	  dbSaveClient,
+    21	  dbDeleteClient,
+    22	  dbGetPackages,
+    23	  dbSavePackage,
+    24	  dbGetTransactions,
+    25	  dbSaveTransaction,
+    26	  dbGetQrisConfig,
+    27	  dbSaveQrisConfig,
+    28	  dbGetContactSettings,
+    29	  dbSaveContactSettings,
+    30	  dbGetAiAgents,
+    31	  dbSaveAiAgent,
+    32	  dbGetCategoryTaxonomy,
+    33	  dbSaveCategoryTaxonomyItem,
+    34	  dbGetCategoryProposals,
+    35	  dbSaveCategoryProposal,
+    36	  dbGetSystemMemory,
+    37	  dbSaveSystemMemory,
+    38	  dbGetPendingSchemaChanges,
+    39	  dbSavePendingSchemaChange,
+    40	  dbGetAuditLogs,
+    41	  dbAddAuditLog
+    42	
+    43	  dbGetAccessCodes, dbSaveAccessCode,
+    44	  dbGetActiveGenerations, dbSaveActiveGenerations,
+    45	  dbGetTrackingEvents, dbAddTrackingEvent,
+    46	  dbGetLearningQueue, dbSaveLearningQueueItem
+    47	
+    48	  dbGetSystemMemory, dbSaveSystemMemory
+    49	
+    50	  dbGetApiKeys, dbSaveApiKeys
+    51	} from './src/db/dbService';
+    52	
+    53	
+    54	
+    55	import { monitorAndValidateIngestion } from './src/agents/agentIngestionMonitor';
+    56	import { extractMultiModalSignals } from './src/agents/agentSignalExtractor';
+    57	import { calculateMultimodalFusionScore } from './src/agents/agentMultimodalFusion';
+    58	import { classifyContentCategory } from './src/agents/agentCategoryClassifier';
+    59	import { proposeNewCategoryTaxonomy } from './src/agents/agentTaxonomyProposer';
+    60	import { updateHookPatternSystemMemory } from './src/agents/agentHookPatternUpdater';
+    61	import { governAEOPipelineExecution } from './src/agents/agentAeoPipelineGovernor';
+    62	import { superviseMetaAutoBuild } from './src/agents/agentMetaAutoBuildSupervisor';
+    63	import { dispatchRealtimeBroadcast } from './src/agents/agentRealtimeBroadcastDispatcher';
+    64	import { auditPaymentAndClientHardening } from './src/agents/agentPaymentClientHardeningAuditor';
+    65	import { buildAEOPipelinePrompt, formatAEOOutputToMarkdown, AEOPipelineResult } from './src/agents/aeoAgentPipeline';
+    66	import {
+    67	  evaluateGrowthAndScale,
+    68	  getGrowthScalingState,
+    69	  rollbackGrowthScalingVersion,
+    70	  setFullAutoMode,
+    71	  saveGrowthScalingState,
+    72	  DEFAULT_GROWTH_STATE
+    73	} from './src/lib/admin/growthScaling';
+    74	import { DEFAULT_AI_AGENTS } from './src/lib/admin/aiAgents';
+    75	
+    76	async function startServer() {
+    77	  const app = express();
+    78	  const PORT = 3000;
+    79	
+    80	  // Initialize DB seed on server startup
+    81	  await initDbSeed();
+    82	
+    83	  // Increase payload limits for base64 video data
+    84	  app.use(express.json({ limit: '100mb' }));
+    85	  app.use(express.urlencoded({ limit: '100mb', extended: true }));
+    86	
+    87	  // Helper to instantiate Gemini AI client dynamically
+    88	  function getGeminiClient(customApiKey?: string) {
+    89	    const keyToUse = customApiKey && customApiKey.trim() ? customApiKey.trim() : process.env.GEMINI_API_KEY;
+    90	    if (!keyToUse) {
+    91	      throw new Error('API Key Gemini tidak dikonfigurasi. Silakan atur di Pengaturan Anti Limit.');
+    92	    }
+    93	    return new GoogleGenAI({
+    94	      apiKey: keyToUse,
+    95	      httpOptions: {
+    96	        headers: {
+    97	          'User-Agent': 'aistudio-build',
+    98	        },
+    99	      },
+   100	    });
+   101	  }
+   102	
+   103	  // --- BACKEND SELF-LEARNING ADAPTIVE SYSTEM MEMORY ENGINE ---
+   104	  interface SystemMemory {
+   105	    totalExecutions: number;
+   106	    successfulPromptsCount: number;
+   107	    learnedKnowledgeBase: string[];
+   108	    viralHookPatterns: string[];
+   109	    categoryUsage: {
+   110	      videoPrompt: number;
+   111	      contentIdeas: number;
+   112	      photoPrompt: number;
+   113	    };
+   114	    formulas?: any[];
+   115	    lastUpdated: string;
+   116	  }
+   117	
+   118	  const MEMORY_FILE_PATH = path.join(process.cwd(), 'system_memory.json');
+   119	
+   120	  async function await loadSystemMemory() { return await dbGetSystemMemory(); }
+   121	
+   122	  let systemMemory = await loadSystemMemory();
+   123	
+   124	  async function saveSystemMemoryAsync() {
+   125	    try {
+   126	      if (!systemMemory) systemMemory = await loadSystemMemory();
+   127	      systemMemory.lastUpdated = new Date().toISOString();
+   128	      await dbSaveSystemMemory(systemMemory);
+   129	      await dispatchRealtimeBroadcast('system_memory_updated', systemMemory);
+   130	    } catch (e) {
+   131	      logger.warn('[System Memory] Failed to save memory to DB:', e);
+   132	    }
+   133	  }
+   134	
+   135	  function saveSystemMemory() {
+   136	    saveSystemMemoryAsync().catch((err) => logger.warn('[System Memory Async Error]', err));
+   137	  }
+   138	
+   139	  function autoUpdateMemory(newInsight?: string) {
+   140	    recordExecutionAndUpgrade('videoPrompt', newInsight);
+   141	  }
+   142	
+   143	  function recordExecutionAndUpgrade(type: 'videoPrompt' | 'contentIdeas' | 'photoPrompt', keyInsight?: string) {
+   144	    if (!systemMemory) systemMemory = await loadSystemMemory();
+   145	    if (!systemMemory.categoryUsage) {
+   146	      systemMemory.categoryUsage = { videoPrompt: 0, contentIdeas: 0, photoPrompt: 0 };
+   147	    }
+   148	    if (!Array.isArray(systemMemory.learnedKnowledgeBase)) {
+   149	      systemMemory.learnedKnowledgeBase = [];
+   150	    }
+   151	    if (!Array.isArray(systemMemory.viralHookPatterns)) {
+   152	      systemMemory.viralHookPatterns = [];
+   153	    }
+   154	    if (!Array.isArray(systemMemory.formulas)) {
+   155	      systemMemory.formulas = [];
+   156	    }
+   157	
+   158	    systemMemory.totalExecutions = (systemMemory.totalExecutions || 0) + 1;
+   159	    systemMemory.successfulPromptsCount = (systemMemory.successfulPromptsCount || 0) + 1;
+   160	    systemMemory.categoryUsage[type] = (systemMemory.categoryUsage[type] || 0) + 1;
+   161	
+   162	    if (keyInsight && !systemMemory.learnedKnowledgeBase.includes(keyInsight)) {
+   163	      systemMemory.learnedKnowledgeBase.push(keyInsight);
+   164	    }
+   165	
+   166	    // Dynamic auto-learning wisdom accumulation
+   167	    if (systemMemory.totalExecutions % 3 === 0) {
+   168	      const autoLearnedInsights = [
+   169	        `Analisis algoritma TikTok terkini (Iterasi ${systemMemory.totalExecutions}): Terapkan variasi tempo pencahayaan dan gerakan zoom-in 1.2x pada 2 detik pertama untuk meningkatkan retention rate.`,
+   170	        `Optimasi Prompt AI Video: Tambahkan indikator pencahayaan volumetric lighting & depth-of-field f/1.8 agar hasil render Sora/Kling/Runway tidak terasa kaku.`,
+   171	        `Penelitian Copywriting FYP: Caption berpola "Masalah -> Solusi Ringkas -> Hasil Bukti -> CTA Direct" terbukti meningkatkan conversion rate affiliate sebesar 35%.`
+   172	      ];
+   173	      const nextInsight = autoLearnedInsights[Math.floor(Math.random() * autoLearnedInsights.length)];
+   174	      if (!systemMemory.learnedKnowledgeBase.includes(nextInsight)) {
+   175	        systemMemory.learnedKnowledgeBase.push(nextInsight);
+   176	      }
+   177	    }
+   178	
+   179	    const currentLevel = Math.floor(systemMemory.totalExecutions / 5) + 1;
+   180	    saveSystemMemory();
+   181	    logger.info(`[Silent Memory Engine] Memory updated: Level ${currentLevel} | Total Executions: ${systemMemory.totalExecutions}`);
+   182	  }
+   183	
+   184	  function getSystemIntelligenceLevel() {
+   185	    if (!systemMemory) systemMemory = await loadSystemMemory();
+   186	    if (!Array.isArray(systemMemory.learnedKnowledgeBase)) {
+   187	      systemMemory.learnedKnowledgeBase = [];
+   188	    }
+   189	    if (!Array.isArray(systemMemory.viralHookPatterns)) {
+   190	      systemMemory.viralHookPatterns = [];
+   191	    }
+   192	    if (!Array.isArray(systemMemory.formulas)) {
+   193	      systemMemory.formulas = [];
+   194	    }
+   195	
+   196	    const totalExecs = systemMemory.totalExecutions || 0;
+   197	    const level = Math.floor(totalExecs / 5) + 1;
+   198	    let title = 'Pengenal Algoritma Pemula';
+   199	    if (level >= 5) title = 'Analis Konten Viral Pro';
+   200	    if (level >= 10) title = 'Master TikTok Strategist & FYP Engineer';
+   201	    if (level >= 20) title = 'Algorithmic Super-Intelligence AI';
+   202	    if (level >= 50) title = 'Autonomous Supreme Content Engine';
+   203	
+   204	    return {
+   205	      level,
+   206	      title,
+   207	      totalExecutions: totalExecs,
+   208	      knowledgeCount: systemMemory.learnedKnowledgeBase.length,
+   209	      formulasCount: systemMemory.formulas.length || systemMemory.learnedKnowledgeBase.length,
+   210	      learnedWisdom: systemMemory.learnedKnowledgeBase.slice(-10),
+   211	      viralHooks: systemMemory.viralHookPatterns
+   212	    };
+   213	  }
+   214	
+   215	  function getInjectedSystemInstruction(baseInstruction: string): string {
+   216	    const memory = systemMemory || await loadSystemMemory();
+   217	    const level = Math.floor((memory.totalExecutions || 0) / 5) + 1;
+   218	    const knowledgeBase = memory.learnedKnowledgeBase || [];
+   219	
+   220	    const memoryContext = `
+   221	\n---
+   222	[BACKEND ADAPTIVE MEMORY CONTEXT]
+   223	Level Pemikiran System: Level ${level} (Total Eksekusi: ${memory.totalExecutions || 0})
+   224	Formulas/Knowledge Terakumulasi:
+   225	${knowledgeBase.map((k: string, i: number) => `${i + 1}. ${k}`).join('\n')}
+   226	---
+   227	Gunakan konteks pengetahuan di atas untuk mengoptimalkan ketajaman output script/prompt.
+   228	`;
+   229	    return (baseInstruction || '') + memoryContext;
+   230	  }
+   231	
+   232	  // Simple in-memory cache for TikTok metadata (10 minute TTL)
+   233	  const tiktokCache = new Map<string, { timestamp: number; data: any }>();
+   234	  const TIKTOK_CACHE_TTL_MS = 10 * 60 * 1000;
+   235	
+   236	  // Server-side response cache for AI prompt generations to save quota (2 Hour TTL)
+   237	  const promptResponseCache = new Map<string, { timestamp: number; text: string; modelUsed: string }>();
+   238	  const PROMPT_CACHE_TTL_MS = 2 * 60 * 60 * 1000;
+   239	
+   240	  const CLIENTS_FILE_PATH = path.join(process.cwd(), 'clients.json');
+   241	  const API_KEYS_FILE_PATH = path.join(process.cwd(), 'api_keys.json');
+   242	
+   243	  async function await getClientInfoByCode(accessCode?: string): Promise<{ name: string; accessCode: string; email?: string }> {
+   244	    if (!accessCode) return { name: 'Klien Satset', accessCode: 'GUEST' };
+   245	    const cleanCode = accessCode.trim().toUpperCase();
+   246	    try {
+   247	      const list = await dbGetClients();
+   248	      const found = list.find((c: any) => c.accessCode && c.accessCode.toUpperCase() === cleanCode);
+   249	      if (found) {
+   250	        return { name: found.name || 'Klien Satset', accessCode: found.accessCode, email: found.email };
+   251	      }
+   252	    } catch (e) { logger.warn('[Client Auth] Gagal membaca clients file (mungkin belum ada)', e); }
+   253	    if (cleanCode.includes('ADMIN')) {
+   254	      return { name: 'Administrator', accessCode: cleanCode };
+   255	    }
+   256	    return { name: 'Klien Satset', accessCode: cleanCode };
+   257	  }
+   258	
+   259	  async function await getClientIsolatedKeys(customApiKeyHeader?: string, clientAccessCode?: string): Promise<string[]> {
+   260	    let userCustomKeys: string[] = [];
+   261	    if (customApiKeyHeader && customApiKeyHeader.trim()) {
+   262	      userCustomKeys = customApiKeyHeader
+   263	        .split(/[
+   264	,]+/)
+   265	        .map((k) => k.trim())
+   266	        .filter(Boolean);
+   267	    }
+   268	
+   269	    let boundKeys: string[] = [];
+   270	    if (clientAccessCode && clientAccessCode !== 'GUEST') {
+   271	      const cleanCode = clientAccessCode.trim().toUpperCase();
+   272	      try {
+   273	        const keysArr = await dbGetApiKeys();
+   274	        boundKeys = keysArr
+   275	          .filter((k: any) => k.status === 'active' && k.accessCode && k.accessCode.toUpperCase() === cleanCode)
+   276	          .map((k: any) => k.key);
+   277	      } catch (e) { logger.warn('[API Keys] Gagal membaca api keys untuk access code', e); }
+   278	    }
+   279	
+   280	    const clientKeys = Array.from(new Set([...userCustomKeys, ...boundKeys])).filter(Boolean);
+   281	    if (clientKeys.length > 0) {
+   282	      return clientKeys;
+   283	    }
+   284	
+   285	    const systemKey = process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.trim() : '';
+   286	    let globalKeys: string[] = [];
+   287	    try {
+   288	      const keysArr = await dbGetApiKeys();
+   289	      globalKeys = keysArr
+   290	        .filter((k: any) => k.status === 'active' && (!k.accessCode || k.accessCode === 'SYSTEM' || k.accessCode === 'GLOBAL'))
+   291	        .map((k: any) => k.key);
+   292	    } catch (e) { logger.warn('[API Keys] Gagal membaca global api keys', e); }
+   293	
+   294	    return Array.from(new Set([systemKey, ...globalKeys])).filter(Boolean);
+   295	  }
+   296	
+   297	  function extractClientAccessCode(req: express.Request): string {
+   298	    const code =
+   299	      (req.headers['x-access-code'] as string) ||
+   300	      (req.headers['x-client-id'] as string) ||
+   301	      (req.headers['x-client-access-code'] as string) ||
+   302	      req.body?.accessCode ||
+   303	      req.body?.clientId ||
+   304	      'GUEST';
+   305	    return code.trim();
+   306	  }
+   307	
+   308	  // Helper function for calling Gemini API with key rotation, candidate model fallback & anti-limit exponential backoff + jitter
+   309	  async function callGeminiWithFallback(
+   310	    userSelectedModel: string,
+   311	    promptPayload: any,
+   312	    customApiKeyHeader?: string,
+   313	    clientAccessCode?: string,
+   314	    targetTier?: any
+   315	  ): Promise<{ text: string; modelUsed: string }> {
+   316	    // Fallback to legacy isolated keys logic if custom key logic is bypassed
+   317	    const keyCandidates = await getClientIsolatedKeys(customApiKeyHeader, clientAccessCode);
+   318	    
+   319	    // We will still support old array of candidate models as fallback
+   320	    let candidateModels = Array.from(new Set([
+   321	      userSelectedModel,
+   322	      'gemini-2.5-flash',
+   323	      'gemini-2.0-flash',
+   324	      'gemini-1.5-flash',
+   325	      'gemini-3.6-flash',
+   326	      'gemini-2.5-flash-lite',
+   327	      'gemini-3.5-flash-lite',
+   328	      'gemini-3.1-flash-lite',
+   329	      'gemini-2-flash-lite',
+   330	      'gemini-2.5-pro',
+   331	      'gemini-3.1-pro-preview',
+   332	      'gemini-3.1-pro',
+   333	      'gemini-1.5-pro'
+   334	    ])).filter((m): m is string => Boolean(m && m.trim().length > 0));
+   335	
+   336	    // Calculate routing plan if targetTier provided
+   337	    try {
+   338	       const plan = getModelRoutingPlan(userSelectedModel, customApiKeyHeader);
+   339	       if (plan && plan.targetModels && plan.targetModels.length > 0) {
+   340	          if (targetTier) {
+   341	              const tierModels = targetTier === 'flagship' ? MODEL_TIERS.flagship : targetTier === 'tier3' ? MODEL_TIERS.tier3 : MODEL_TIERS.tier2;
+   342	              candidateModels = Array.from(new Set([
+   343	                  userSelectedModel,
+   344	                  ...tierModels,
+   345	                  ...plan.targetModels
+   346	              ]));
+   347	          } else {
+   348	             candidateModels = plan.targetModels;
+   349	          }
+   350	       }
+   351	    } catch (e) {
+   352	       logger.warn('[Routing] Failed to calculate model routing plan, using fallback list');
+   353	    }
+   354	
+   355	    if (keyCandidates.length === 0) {
+   356	      throw new Error('API Key Gemini tidak dikonfigurasi. Silakan atur di Pengaturan Anti Limit.');
+   357	    }
+   358	
+   359	    let lastError: any = null;
+   360	
+   361	    for (let kIdx = 0; kIdx < keyCandidates.length; kIdx++) {
+   362	      const activeKey = keyCandidates[kIdx];
+   363	      let aiInstance: GoogleGenAI;
+   364	      try {
+   365	        aiInstance = getGeminiClient(activeKey);
+   366	      } catch (e) {
+   367	        continue;
+   368	      }
+   369	
+   370	      for (const targetModel of candidateModels) {
+   371	        let attempts = 0;
+   372	        const maxAttempts = 2;
+   373	
+   374	        while (attempts < maxAttempts) {
+   375	          attempts++;
+   376	          try {
+   377	            logger.info(`[Gemini Request] Key #${kIdx + 1}/${keyCandidates.length}, Model: ${targetModel}, Attempt: ${attempts}...`);
+   378	            
+   379	            // Build request config with High Thinking mode support for gemini-3.1-pro-preview
+   380	            const isThinkingModel = targetModel === 'gemini-3.1-pro-preview' || targetModel === 'gemini-3.1-pro';
+   381	            const baseConfig = promptPayload.config || {};
+   382	            
+   383	            const requestConfig: any = {
+   384	              ...baseConfig,
+   385	            };
+   386	
+   387	            const rawInstruction = requestConfig.systemInstruction || "You are an elite AI assistant.";
+   388	            requestConfig.systemInstruction = getInjectedSystemInstruction(rawInstruction);
+   389	
+   390	            if (isThinkingModel) {
+   391	              requestConfig.thinkingConfig = {
+   392	                thinkingLevel: 'HIGH',
+   393	              };
+   394	              // Crucial: Do NOT set maxOutputTokens when thinking mode is enabled
+   395	              delete requestConfig.maxOutputTokens;
+   396	            }
+   397	
+   398	            const response = await aiInstance.models.generateContent({
+   399	              model: targetModel,
+   400	              contents: promptPayload.contents,
+   401	              config: requestConfig,
+   402	            });
+   403	
+   404	            if (response && response.text) {
+   405	              return { text: response.text, modelUsed: targetModel };
+   406	            }
+   407	          } catch (err: any) {
+   408	            lastError = err;
+   409	            const errMsg = String(err?.message || err || '');
+   410	            const status = (err as any)?.status || (err as any)?.statusCode || 0;
+   411	
+   412	            logger.warn(`[Gemini Warning] Key #${kIdx + 1}, Model ${targetModel} attempt ${attempts} failed:`, errMsg);
+   413	
+   414	            const isDeadKey =
+   415	              status === 403 ||
+   416	              errMsg.includes('403') ||
+   417	              errMsg.includes('API_KEY_INVALID') ||
+   418	              errMsg.includes('API key not found') ||
+   419	              errMsg.includes('PERMISSION_DENIED') ||
+   420	              errMsg.includes('UNAUTHENTICATED');
+   421	
+   422	            const isRateLimitOrQuota =
+   423	              status === 429 ||
+   424	              errMsg.includes('429') ||
+   425	              errMsg.includes('RESOURCE_EXHAUSTED') ||
+   426	              errMsg.includes('Quota exceeded') ||
+   427	              errMsg.includes('limit: 0');
+   428	
+   429	            if (isDeadKey || isRateLimitOrQuota) {
+   430	                // Apply circuit breaker: cooldown for 5 minutes
+   431	                try {
+   432	                   const keys = getApiKeys();
+   433	const foundKey = keys.find((k: any) => k.key === activeKey);
+   434	                   if (foundKey) {
+   435	                       foundKey.cooldownUntil = Date.now() + 5 * 60 * 1000;
+   436	                       saveApiKeys(keys);
+   437	logger.warn(`[Circuit Breaker] Key #${kIdx + 1} isolated until ${new Date(foundKey.cooldownUntil).toISOString()}`);
+   438	                   }
+   439	                } catch(cbErr) {
+   440	                   // ignore if admin tools not accessible
+   441	                }
+   442	            }
+   443	
+   444	            if (isDeadKey) {
+   445	              logger.warn(`[Auto-Prune] Key #${kIdx + 1} is invalid/dead. Rotating to next key...`);
+   446	              attempts = maxAttempts;
+   447	              break;
+   448	            }
+   449	
+   450	            if (isRateLimitOrQuota) {
+   451	              logger.info(`[Model Cascading] Model ${targetModel} rate limited on Key #${kIdx + 1}. Cascading to next model...`);
+   452	              attempts = maxAttempts;
+   453	              break;
+   454	            }
+   455	
+   456	            if (errMsg.includes('503') || errMsg.includes('UNAVAILABLE') || errMsg.includes('demand')) {
+   457	              const jitter = Math.floor(Math.random() * 2000);
+   458	              const backoffDelay = 1000 + jitter;
+   459	              logger.info(`[Anti-Limit Backoff] Waiting ${backoffDelay}ms before retry...`);
+   460	              await new Promise((resolve) => setTimeout(resolve, backoffDelay));
+   461	            } else {
+   462	              attempts = maxAttempts;
+   463	              break;
+   464	            }
+   465	          }
+   466	        }
+   467	
+   468	        const lastErrStr = String(lastError?.message || lastError || '');
+   469	        const isDeadKey =
+   470	          lastErrStr.includes('403') ||
+   471	          lastErrStr.includes('API_KEY_INVALID') ||
+   472	          lastErrStr.includes('PERMISSION_DENIED') ||
+   473	          lastErrStr.includes('UNAUTHENTICATED');
+   474	
+   475	        if (isDeadKey) {
+   476	          break;
+   477	        }
+   478	      }
+   479	    }
+   480	
+   481	    const errorMsg = String(lastError?.message || lastError || '');
+   482	    if (errorMsg.includes('429') || errorMsg.includes('RESOURCE_EXHAUSTED') || errorMsg.includes('Quota exceeded')) {
+   483	      const err = new Error('Batas kuota harian/menit AI Gemini telah terlampaui (429 Rate Limit). Silakan tambahkan satu atau beberapa API Key cadangan di menu "Anti Limit API" di bagian atas.');
+   484	      (err as any).statusCode = 429;
+   485	      throw err;
+   486	    } else if (errorMsg.includes('503') || errorMsg.includes('UNAVAILABLE') || errorMsg.includes('demand')) {
+   487	      const err = new Error('Model AI Gemini saat ini sedang mengalami lonjakan trafik (503 High Demand). Silakan coba klik tombol "Hasilkan Ulang" dalam beberapa saat lagi.');
+   488	      (err as any).statusCode = 503;
+   489	      throw err;
+   490	    }
+   491	
+   492	    throw lastError || new Error('Gagal menghasilkan prompt dari AI Gemini.');
+   493	  }
+   494	
+   495	  // API endpoint for Video Analysis & Prompt Generation
+   496	  app.post('/api/generate-prompt', async (req, res) => {
+   497	    const clientAccessCode = extractClientAccessCode(req);
+   498	    const clientInfo = await getClientInfoByCode(clientAccessCode);
+   499	    const taskId = req.body.taskId || `gen_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+   500	
+   501	    const activeTask = {
+   502	      id: taskId,
+   503	      clientId: clientAccessCode,
+   504	      accessCode: clientAccessCode,
+   505	      clientName: clientInfo.name,
+   506	      tool: 'Video to Prompt',
+   507	      status: 'generating',
+   508	      category: req.body.category || 'umum',
+   509	      startedAt: new Date().toISOString(),
+   510	      updatedAt: Date.now(),
+   511	    };
+   512	    activeGenerationsMap.set(taskId, activeTask);
+   513	
+   514	    broadcastLiveEvent({
+   515	      type: 'active_status_update',
+   516	      activeGenerations: Array.from(activeGenerationsMap.values()),
+   517	      activeUserCount: sseClients.size,
+   518	    });
+   519	
+   520	    try {
+   521	      const customApiKey = (req.headers['x-custom-api-key'] as string) || req.body.customApiKey;
+   522	      const useCache = req.headers['x-use-cache'] !== 'false';
+   523	
+   524	      const {
+   525	        mimeType,
+   526	        base64Data,
+   527	        model = 'gemini-3.6-flash',
+   528	        targetAI = 'general', // sora | runway | kling | luma | pika | general
+   529	        segmentDuration = '10',
+   530	        includeActions = true,
+   531	        includeVoiceOver = true,
+   532	        includeCinematics = true,
+   533	      } = req.body;
+   534	
+   535	      if (!base64Data || !mimeType) {
+   536	        return res.status(400).json({ error: 'Data video dan tipe MIME diperlukan' });
+   537	      }
+   538	
+   539	      // Check Cache to save quota & prevent rate limits using content hash
+   540	      const contentHash = crypto.createHash('sha256').update(base64Data).digest('hex').slice(0, 32);
+   541	      const cacheInput = `${mimeType}_${base64Data.length}_${contentHash}_${model}_${targetAI}_${segmentDuration}_${includeActions}_${includeVoiceOver}_${includeCinematics}`;
+   542	      const cacheKey = crypto.createHash('sha256').update(cacheInput).digest('hex');
+   543	
+   544	      if (useCache) {
+   545	        const cached = promptResponseCache.get(cacheKey);
+   546	
+   547	        if (cached && Date.now() - cached.timestamp < PROMPT_CACHE_TTL_MS) {
+   548	          logger.info('[Prompt Cache Hit - Saved Quota]', cacheKey);
+   549	          return res.json({ prompt: cached.text, modelUsed: cached.modelUsed, cached: true });
+   550	        }
+   551	      }
+   552	
+   553	      // Supported primary model choices
+   554	      const userSelectedModel = model || 'gemini-3.6-flash';
+   555	
+   556	      // Target AI Generator Syntax Guide
+   557	      let aiGuide = '';
+   558	      if (targetAI === 'runway') {
+   559	        aiGuide = 'Format prompt dioptimalkan khusus untuk Runway Gen-3 Alpha. Gunakan deskripsi pergerakan kamera persis, pencahayaan sinematik, dan gerakan karakter fluid. Akhiri dengan kata kunci style sinematik.';
+   560	      } else if (targetAI === 'sora') {
+   561	        aiGuide = 'Format prompt dioptimalkan khusus untuk OpenAI Sora. Sertakan deskripsi naratif yang sangat kaya akan fotorealisme, fisika dunia, pencahayaan alami, dan depth of field.';
+   562	      } else if (targetAI === 'kling') {
+   563	        aiGuide = 'Format prompt dioptimalkan untuk Kling AI. Sertakan instruksi detail mengenai tekstur visual, pencahayaan, gerakan halus 3D, dan aksi karakter.';
+   564	      } else if (targetAI === 'luma') {
+   565	        aiGuide = 'Format prompt dioptimalkan untuk Luma Dream Machine. Fokus pada gerakan kamera fokal, pencahayaan atmosferik, dan konsistensi elemen visual.';
+   566	      } else {
+   567	        aiGuide = 'Format prompt siap pakai universal untuk semua AI Video Generator (Sora, Runway Gen-3, Kling, Luma, Pika).';
+   568	      }
+   569	
+   570	      // Build custom user prompt instruction based on duration segmentation and feature options
+   571	      let promptText = '';
+   572	
+   573	      if (segmentDuration !== 'auto') {
+   574	        const sec = parseInt(segmentDuration, 10) || 10;
+   575	        promptText = `Anda adalah AI Video Prompt Engineer & Sinematografer Kelas Dunia.
+   576	Analisis video/skrip ini dengan presisi tinggi. ${aiGuide}
+   577	PECAH & BAGI seluruh durasi video menjadi beberapa segmen prompt klip terpisah dengan durasi masing-masing tepat sekitar ${sec} detik (pilihan split user: ${sec} detik per klip).
+   578	Contoh: Jika durasi total video adalah 30 detik dan split ${sec} detik, buatlah persis ${Math.max(1, Math.ceil(30 / sec))} segmen klip (Klip 1: 00:00 - 00:${sec < 10 ? '0' + sec : sec}, Klip 2: 00:${sec < 10 ? '0' + sec : sec} - ..., dst).
+   579	
+   580	PENTING: Untuk SETIAP segmen klip (${sec} detik), Anda WAJIB menggunakan struktur tag dalam tanda kurung siku berikut ini secara persis (dalam Bahasa Inggris untuk kompatibilitas AI Video Generator):
+   581	
+   582	### 🎬 KLIP PROMPT SEGMEN [Nomor Klip] (Timestamp: [Awal] - [Akhir])
+   583	
+   584	[Style]: The visual style is commercial, polished, high production quality e-commerce product or video demonstration, bright even lighting, clean aesthetic.
+   585	[Environment]: Detailed description of setting, furniture, background elements, window light, props, background color palette.
+   586	[Tone & Pacing]: Tone (friendly, confident, enthusiastic), presenter expression, speech delivery pace and energy.
+   587	[Camera]: Static or dynamic camera move (medium shot, eye-level angle, framing, no camera shake or panning).
+   588	[Lighting]: Soft, diffused frontal lighting, bright natural light, subtle skin highlights, no harsh shadows.
+   589	[Actions]:
+   590	- Detailed physical actions, body language, hands position, product holding, gestures at specific timestamps.
+   591	- **Dialogue**: "Exact line or voice-over transcript for this clip segment."
+   592	- Additional reaction, smiling, nodding, or product movement.
+   593	[Background Sound]: Crisp voice recording, ambient sound or background music details (or silence).
+   594	[Transition / Editing]: Single continuous shot, clean cut, or smooth clip transition.
+   595	[Call to Action]: Verbalized call to action or inviting final gesture for this segment if applicable.
+   596	
+   597	- **Master Prompt AI Video (Siap Copy untuk ${targetAI.toUpperCase()})**:
+   598	\`\`\`text
+   599	[Style]: The visual style is commercial and polished...
+   600	[Environment]: The setting is...
+   601	[Tone & Pacing]: The tone is...
+   602	[Camera]: The camera is...
+   603	[Lighting]: The scene is lit with...
+   604	[Actions]:
+   605	- The clip begins with...
+   606	- **Dialogue**: "..."
+   607	[Background Sound]: Clear voice...
+   608	[Transition / Editing]: Single continuous shot...
+   609	[Call to Action]: "..."
+   610	\`\`\`
+   611	
+   612	---`;
+   613	      } else {
+   614	        promptText = `Anda adalah AI Video Prompt Engineer & Sinematografer Kelas Dunia.
+   615	Analisis video/skrip ini secara menyeluruh dari awal hingga akhir. ${aiGuide}
+   616	Hasilkan breakdown terstruktur serta Master Prompt AI Rekreatif menggunakan format tag resmi berikut ini:
+   617	
+   618	### 🎬 MASTER PROMPT VIDEO LENGKAP
+   619	
+   620	[Style]: The visual style is commercial and polished, typical of an e-commerce product demonstration video for social media. It employs a clean aesthetic with bright, even lighting to highlight the product and the presenter.
+   621	
+   622	[Environment]: The setting is a modern, well-lit space. Detailed background elements, furniture, lighting, and decor.
+   623	
+   624	[Tone & Pacing]: Friendly, enthusiastic, and confident tone. Warm engaging smile throughout. Moderate persuasive speech delivery.
+   625	
+   626	[Camera]: Static or dynamic camera setup, maintaining consistent medium shot, eye-level angle, direct personal connection.
+   627	
+   628	[Lighting]: Bright, soft, and even frontal lighting, softbox diffusion, natural window light, flattering professional illumination.
+   629	
+   630	[Actions]:
+   631	- Chronological step-by-step breakdown of subject movements, product interaction, gestures at specific timestamps.
+   632	- **Dialogue**: "Exact transcript or voice-over script kata demi kata."
+   633	- Additional gestures and reactions.
+   634	
+   635	[Background Sound]: Clear well-recorded voice, background music or ambient sound setup.
+   636	
+   637	[Transition / Editing]: Single continuous shot or specific transition notes.
+   638	
+   639	[Call to Action]: Explicitly verbalized call to action or visual CTA.
+   640	
+   641	- **Master Prompt AI Video (Siap Copy untuk ${targetAI.toUpperCase()})**:
+   642	\`\`\`text
+   643	[Style]: The visual style is commercial and polished...
+   644	[Environment]: The setting is...
+   645	[Tone & Pacing]: The tone is...
+   646	[Camera]: The camera is...
+   647	[Lighting]: The scene is lit with...
+   648	[Actions]:
+   649	- The video begins with...
+   650	- **Dialogue**: "..."
+   651	[Background Sound]: Clear voice...
+   652	[Transition / Editing]: Single continuous shot...
+   653	[Call to Action]: "..."
+   654	\`\`\``;
+   655	      }
+   656	
+   657	      let promptPayload: any;
+   658	
+   659	      if (mimeType === 'text/plain') {
+   660	        const rawUserText = Buffer.from(base64Data, 'base64').toString('utf-8');
+   661	        promptPayload = {
+   662	          contents: {
+   663	            parts: [
+   664	              {
+   665	                text: `BERIKUT TEKS DESKRIPSI / SKRIP / KONSEP ADAGAN INPUT DARI USER:
+   666	"""
+   667	${rawUserText}
+   668	"""
+   669	
+   670	TUGAS UTAMA ANDA:
+   671	${promptText}`
+   672	              }
+   673	            ]
+   674	          },
+   675	          config: {
+   676	            systemInstruction:
+   677	              "You are an elite cinematographer, video editor, and AI prompt engineer. Your task is to analyze user requests, video descriptions, and scripts with extreme precision. Break down the scene, physical actions, voice overs, camera moves, and lighting into clean, copyable video prompts in English for each segment. Output your response clearly using the requested Indonesian headers and Markdown layout.",
+   678	          }
+   679	        };
+   680	      } else {
+   681	        promptPayload = {
+   682	          contents: {
+   683	            parts: [
+   684	              {
+   685	                inlineData: {
+   686	                  mimeType: mimeType,
+   687	                  data: base64Data,
+   688	                },
+   689	              },
+   690	              {
+   691	                text: promptText,
+   692	              },
+   693	            ],
+   694	          },
+   695	          config: {
+   696	            systemInstruction:
+   697	              "You are an elite cinematographer, video editor, and AI prompt engineer. Your task is to analyze videos with extreme accuracy. Pay close attention to physical actions, speech transcriptions, voice overs, camera moves, and lighting. Output your response clearly using the requested Indonesian headers and Markdown layout.",
+   698	          },
+   699	        };
+   700	      }
+   701	
+   702	      const result = await callGeminiWithFallback(userSelectedModel, promptPayload, customApiKey, clientAccessCode);
+   703	
+   704	      // Record successful execution & train system memory
+   705	      recordExecutionAndUpgrade('videoPrompt');
+   706	
+   707	      activeTask.status = 'completed';
+   708	      activeTask.updatedAt = Date.now();
+   709	      activeGenerationsMap.set(taskId, activeTask);
+   710	
+   711	      broadcastLiveEvent({
+   712	        type: 'active_status_update',
+   713	        activeGenerations: Array.from(activeGenerationsMap.values()),
+   714	        activeUserCount: sseClients.size,
+   715	      });
+   716	
+   717	      setTimeout(() => {
+   718	        activeGenerationsMap.delete(taskId);
+   719	        broadcastLiveEvent({
+   720	          type: 'active_status_update',
+   721	          activeGenerations: Array.from(activeGenerationsMap.values()),
+   722	          activeUserCount: sseClients.size,
+   723	        });
+   724	      }, 120000);
+   725	
+   726	      if (useCache) {
+   727	        const cacheInput = `${mimeType}_${base64Data.slice(0, 500)}_${base64Data.length}_${model}_${targetAI}_${segmentDuration}`;
+   728	        const cacheKey = crypto.createHash('sha256').update(cacheInput).digest('hex');
+   729	        promptResponseCache.set(cacheKey, { timestamp: Date.now(), text: result.text, modelUsed: result.modelUsed });
+   730	      }
+   731	
+   732	      res.json({ prompt: result.text, modelUsed: result.modelUsed });
+   733	    } catch (error: any) {
+   734	      logger.error('Error generating video prompt:', error);
+   735	      const statusCode = error.statusCode || 500;
+   736	      res.status(statusCode).json({ error: error.message || 'Terjadi kesalahan saat menganalisis video dengan AI.' });
+   737	    }
+   738	  });
+   739	
+   740	  // API endpoint for Image / Photo Analysis & AI Image Prompt Generation
+   741	  app.post('/api/generate-photo-prompt', async (req, res) => {
+   742	    const clientAccessCode = extractClientAccessCode(req);
+   743	    const clientInfo = await getClientInfoByCode(clientAccessCode);
+   744	    const taskId = req.body.taskId || `gen_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+   745	
+   746	    const activeTask = {
+   747	      id: taskId,
+   748	      clientId: clientAccessCode,
+   749	      accessCode: clientAccessCode,
+   750	      clientName: clientInfo.name,
+   751	      tool: 'Photo Prompt',
+   752	      status: 'generating',
+   753	      category: req.body.category || 'umum',
+   754	      startedAt: new Date().toISOString(),
+   755	      updatedAt: Date.now(),
+   756	    };
+   757	    activeGenerationsMap.set(taskId, activeTask);
+   758	
+   759	    broadcastLiveEvent({
+   760	      type: 'active_status_update',
+   761	      activeGenerations: Array.from(activeGenerationsMap.values()),
+   762	      activeUserCount: sseClients.size,
+   763	    });
+   764	
+   765	    try {
+   766	      const customApiKey = (req.headers['x-custom-api-key'] as string) || req.body.customApiKey;
+   767	      const useCache = req.headers['x-use-cache'] !== 'false';
+   768	
+   769	      const {
+   770	        mimeType,
+   771	        base64Data,
+   772	        model = 'gemini-3.6-flash',
+   773	        targetGenerator = 'nanobananapro', // nanobananapro | midjourney | flux | dalle3 | stablediffusion
+   774	        photoStyle = 'commercial', // commercial | portrait | cinematic | product | anime | architectural
+   775	        aspectRatio = '--ar 16:9',
+   776	        negativePrompt,
+   777	        referenceImageBase64,
+   778	        referenceImageMimeType
+   779	      } = req.body;
+   780	
+   781	      if (!base64Data || !mimeType) {
+   782	        return res.status(400).json({ error: 'Data gambar/teks dan tipe MIME diperlukan' });
+   783	      }
+   784	
+   785	      if (useCache) {
+   786	        const cacheInput = `photo_${mimeType}_${base64Data.slice(0, 500)}_${base64Data.length}_${model}_${targetGenerator}_${photoStyle}_${aspectRatio}_${negativePrompt || ''}_${referenceImageBase64 ? referenceImageBase64.slice(0,500) : ''}`;
+   787	        const cacheKey = crypto.createHash('sha256').update(cacheInput).digest('hex');
+   788	        const cached = promptResponseCache.get(cacheKey);
+   789	
+   790	        if (cached && Date.now() - cached.timestamp < PROMPT_CACHE_TTL_MS) {
+   791	          logger.info('[Photo Prompt Cache Hit - Saved Quota]', cacheKey);
+   792	          return res.json({ prompt: cached.text, modelUsed: cached.modelUsed, cached: true });
+   793	        }
+   794	      }
+   795	
+   796	      const userSelectedModel = model === 'gemini-3.1-pro-preview' ? 'gemini-3.1-pro-preview' : 'gemini-3.6-flash';
+   797	
+   798	      const promptText = `Anda adalah Director of Photography (DoP) Sinematik & World-Class AI Image Prompt Engineer spesialis NANO BANANA PRO & Google Imagen Ultra.
+   799	Analisis gambar / konsep deskripsi foto input ini secara profesional.
+   800	
+   801	Target Utama AI Generator: NANO BANANA PRO ULTRA / IMAGEN READY
+   802	Gaya Visual Foto: ${photoStyle.toUpperCase()}
+   803	Target Aspect Ratio: ${aspectRatio}
+   804	
+   805	PENTING: JANGAN MENULISKAN JUDUL HEADER DENGAN KURUNG SIKU SEPUSAT SEPERTI '[Nano Banana Pro Ultra - Photorealistic Master Engine]'. Output prompt pada block \`\`\`text HARUS LANGSUNG DIMULAI DENGAN 'Subject & Styling:'.
+   806	
+   807	Buatkan output terstruktur dalam format Markdown berikut secara persis:
+   808	
+   809	### 🍌 NANO BANANA PRO ULTRA MASTER PROMPT (UTAMA SIAP COPY)
+   810	\`\`\`text
+   811	Subject & Styling: A hyper-detailed ${photoStyle} photograph of [subject details, age, expression, pose, outfit fabric texture].
+   812	Environment & Atmosphere: [Setting, architecture, background elements, atmospheric depth, color palette].
+   813	Lighting Physics: [Exact lighting direction, softbox diffusion, specular highlights, rim light, ambient color temperature].
+   814	Camera Optics: Shot on Hasselblad H6D-100c, 85mm f/1.4 prime lens, sharp focus on eyes/details, ultra-shallow depth of field, natural optical bokeh.
+   815	Image Quality & Texture: 8k resolution, photorealistic micro skin pores, authentic raytraced reflections, no artificial smooth gloss, commercial high-end production standard, aspect ratio ${aspectRatio.replace('--ar ', '')}.
+   816	\`\`\`
+   817	
+   818	---
+   819	
+   820	### 📸 ANALISIS DETAIL VISUAL FOTO
+   821	- **Subjek & Pose**: [Detil subjek utama, pakaian, ekspresi wajah, pose tubuh, gesture]
+   822	- **Setting & Environment**: [Latar belakang, dekorasi, arsitektur, elemen lingkungan, prop]
+   823	- **Pencahayaan (Lighting)**: [Setup lighting, softbox, golden hour, rim light, shadow & highlight]
+   824	- **Kamera & Lensa**: [Estimasi fokal f/1.4 - f/2.8, jenis kamera (Hasselblad, Leica, Sony A7R V, Canon EOS R5), jarak fokal 35mm / 85mm / 105mm macro]
+   825	- **Warna & Tekstur**: [Color grading, temperatur warna, tekstur kulit/kain/bahan, depth of field]`;
+   826	
+   827	      let extendedPromptText = promptText;
+   828	      if (negativePrompt && negativePrompt.trim()) {
+   829	        extendedPromptText += `\n\nTAMBAHKAN TAG BERIKUT PADA PROMPT: [Negative Prompt]: ${negativePrompt.trim()}`;
+   830	      }
+   831	
+   832	      let promptPayload: any = {
+   833	        contents: {
+   834	          parts: []
+   835	        },
+   836	        config: {
+   837	          systemInstruction: "You are an elite photographer and AI image prompt engineer. Convert user input photo descriptions or uploaded images into highly detailed, realistic, and copyable prompts for Midjourney v6, Flux.1, DALL-E 3, and SDXL.",
+   838	        }
+   839	      };
+   840	
+   841	      if (mimeType === 'text/plain') {
+   842	        const rawUserText = Buffer.from(base64Data, 'base64').toString('utf-8');
+   843	        
+   844	        promptPayload.contents.parts.push({
+   845	          text: `BERIKUT DESKRIPSI / KONSEP FOTO INPUT DARI USER:\n"""\n${rawUserText}\n"""\n\nTUGAS UTAMA ANDA:\n${extendedPromptText}`
+   846	        });
+   847	
+   848	        if (referenceImageBase64 && referenceImageMimeType) {
+   849	          promptPayload.contents.parts.push({
+   850	            text: `\n\nIni adalah IDENTITY ANCHOR REFERENCE IMAGE opsional yang diberikan user:`
+   851	          });
+   852	          promptPayload.contents.parts.push({
+   853	            inlineData: {
+   854	              mimeType: referenceImageMimeType,
+   855	              data: referenceImageBase64,
+   856	            },
+   857	          });
+   858	        }
+   859	      } else {
+   860	        promptPayload.contents.parts.push({
+   861	          inlineData: {
+   862	            mimeType: mimeType,
+   863	            data: base64Data,
+   864	          },
+   865	        });
+   866	        promptPayload.contents.parts.push({
+   867	          text: extendedPromptText,
+   868	        });
+   869	      }
+   870	
+   871	      const result = await callGeminiWithFallback(userSelectedModel, promptPayload, customApiKey, clientAccessCode);
+   872	
+   873	      // Record successful execution & train system memory
+   874	      recordExecutionAndUpgrade('photoPrompt');
+   875	
+   876	      activeTask.status = 'completed';
+   877	      activeTask.updatedAt = Date.now();
+   878	      activeGenerationsMap.set(taskId, activeTask);
+   879	
+   880	      broadcastLiveEvent({
+   881	        type: 'active_status_update',
+   882	        activeGenerations: Array.from(activeGenerationsMap.values()),
+   883	        activeUserCount: sseClients.size,
+   884	      });
+   885	
+   886	      setTimeout(() => {
+   887	        activeGenerationsMap.delete(taskId);
+   888	        broadcastLiveEvent({
+   889	          type: 'active_status_update',
+   890	          activeGenerations: Array.from(activeGenerationsMap.values()),
+   891	          activeUserCount: sseClients.size,
+   892	        });
+   893	      }, 120000);
+   894	
+   895	      if (useCache) {
+   896	        const cacheInput = `photo_${mimeType}_${base64Data.slice(0, 500)}_${base64Data.length}_${model}_${targetGenerator}_${photoStyle}_${aspectRatio}`;
+   897	        const cacheKey = crypto.createHash('sha256').update(cacheInput).digest('hex');
+   898	        promptResponseCache.set(cacheKey, { timestamp: Date.now(), text: result.text, modelUsed: result.modelUsed });
+   899	      }
+   900	
+   901	      res.json({ prompt: result.text, modelUsed: result.modelUsed });
+   902	    } catch (error: any) {
+   903	      logger.error('Error generating photo prompt:', error);
+   904	      const statusCode = error.statusCode || 500;
+   905	      res.status(statusCode).json({ error: error.message || 'Terjadi kesalahan saat membuat prompt foto.' });
+   906	    }
+   907	  });
+   908	
+   909	  // API endpoint for 5 TikTok Content Ideas, Captions & Hashtags Generator (2-Stage Grounded Pipeline & Anti-AI-Slop)
+   910	  app.post('/api/generate-content-ideas', async (req, res) => {
+   911	    const clientAccessCode = extractClientAccessCode(req);
+   912	    const clientInfo = await getClientInfoByCode(clientAccessCode);
+   913	    const taskId = req.body.taskId || `gen_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+   914	
+   915	    const activeTask = {
+   916	      id: taskId,
+   917	      clientId: clientAccessCode,
+   918	      accessCode: clientAccessCode,
+   919	      clientName: clientInfo.name,
+   920	      tool: 'Idea Konten',
+   921	      status: 'generating',
+   922	      category: req.body.category || 'umum',
+   923	      startedAt: new Date().toISOString(),
+   924	      updatedAt: Date.now(),
+   925	    };
+   926	    activeGenerationsMap.set(taskId, activeTask);
+   927	
+   928	    broadcastLiveEvent({
+   929	      type: 'active_status_update',
+   930	      activeGenerations: Array.from(activeGenerationsMap.values()),
+   931	      activeUserCount: sseClients.size,
+   932	    });
+   933	
+   934	    try {
+   935	      const customApiKey = (req.headers['x-custom-api-key'] as string) || req.body.customApiKey;
+   936	      const useCache = req.headers['x-use-cache'] !== 'false';
+   937	
+   938	      const {
+   939	        mimeType,
+   940	        base64Data,
+   941	        sourceTitle = '',
+   942	        topic = '',
+   943	        contentType = 'affiliate', // affiliate | tutorial | review | storytelling | entertainment
+   944	        tone = 'persuasive', // persuasive | funny | casual | expert | dramatic
+   945	        maxDuration = '60', // 15 | 30 | 60 | 90 | 120
+   946	        segmentDuration = '5', // 5 | 8 | 10 | 15 | auto
+   947	        targetAI = 'general', // general | sora | kling | runway | pika | hailuo | veo
+   948	        model = 'gemini-3.6-flash',
+   949	        aeoQueryMode = 'both',
+   950	        enableBigSound = true,
+   951	        enableTextOverlay = true,
+   952	        referenceImageBase64 = '',
+   953	        referenceImageMimeType = '',
+   954	        userSeedQueries = [],
+   955	      } = req.body;
+   956	
+   957	      if (!base64Data && !topic && !sourceTitle) {
+   958	        return res.status(400).json({ error: 'Mohon sediakan data video TikTok, judul, atau topik konten.' });
+   959	      }
+   960	
+   961	      const sampleData = base64Data ? base64Data.slice(0, 300) : topic || sourceTitle;
+   962	      const refImgSample = referenceImageBase64 ? referenceImageBase64.slice(0, 50) : '';
+   963	      
+   964	      let userSeedQueriesClean = Array.isArray(userSeedQueries) 
+   965	        ? userSeedQueries.map(s => String(s).trim().slice(0, 80)).filter(s => s.length > 0).slice(0, 10)
+   966	        : [];
+   967	      
+   968	      const userSeedSample = userSeedQueriesClean.join('|').slice(0, 50);
+   969	
+   970	      const cacheInput = `content_ideas_v3_${mimeType}_${sampleData}_${model}_${contentType}_${tone}_${maxDuration}_${segmentDuration}_${targetAI}_${aeoQueryMode}_${enableBigSound}_${enableTextOverlay}_${refImgSample}_${userSeedSample}`;
+   971	      const cacheKey = crypto.createHash('sha256').update(cacheInput).digest('hex');
+   972	
+   973	      if (useCache) {
+   974	        const cached = promptResponseCache.get(cacheKey);
+   975	
+   976	        if (cached && Date.now() - cached.timestamp < PROMPT_CACHE_TTL_MS) {
+   977	          logger.info('[Content Ideas Cache Hit - Saved Quota]', cacheKey);
+   978	          return res.json({ result: cached.text, modelUsed: cached.modelUsed, cached: true });
+   979	        }
+   980	      }
+   981	
+   982	      const userSelectedModel = model === 'gemini-3.1-pro-preview' ? 'gemini-3.1-pro-preview' : 'gemini-3.6-flash';
+   983	      const maxSecNum = parseInt(maxDuration, 10) || 60;
+   984	      const targetAIName = targetAI === 'sora' ? 'OpenAI Sora' : targetAI === 'kling' ? 'Kling AI' : targetAI === 'runway' ? 'Runway Gen-3' : targetAI === 'pika' ? 'Pika Labs' : targetAI === 'hailuo' ? 'Hailuo / Minimax' : targetAI === 'veo' ? 'Google Veo' : 'General AI Video Generator';
+   985	
+   986	      // Hitung jumlah klip & timestamp rentang waktu secara dinamis
+   987	      let segSecNum = 5;
+   988	      if (segmentDuration === '8') segSecNum = 8;
+   989	      else if (segmentDuration === '10') segSecNum = 10;
+   990	      else if (segmentDuration === '15') segSecNum = 15;
+   991	      else if (segmentDuration === 'auto') segSecNum = Math.max(5, Math.ceil(maxSecNum / 4));
+   992	      else segSecNum = parseInt(segmentDuration, 10) || 5;
+   993	
+   994	      const expectedClipsCount = Math.ceil(maxSecNum / segSecNum);
+   995	
+   996	      const timestampGuideList: string[] = [];
+   997	      let currentSec = 0;
+   998	      for (let i = 1; i <= expectedClipsCount; i++) {
+   999	        const nextSec = Math.min(maxSecNum, currentSec + segSecNum);
+  1000	        const startStr = `${String(Math.floor(currentSec / 60)).padStart(2, '0')}:${String(currentSec % 60).padStart(2, '0')}`;
+  1001	        const endStr = `${String(Math.floor(nextSec / 60)).padStart(2, '0')}:${String(nextSec % 60).padStart(2, '0')}`;
+  1002	
+  1003	        timestampGuideList.push(`  - **[${startStr} - ${endStr}] Klip ${i}${i === 1 ? ' (Hook)' : ''}**:
+  1004	    - *Aksi & Dialog/VO*: [Deskripsi ringkas aksi visual faktual + Dialog kasual natural]
+  1005	    - *Prompt AI Video*:
+  1006	\`\`\`text
+  1007	[Style]: Bright, commercial e-commerce product video, clean and polished aesthetic.
+  1008	[Environment]: Detailed description of setting, room, furniture, props, and background in English.
+  1009	[Tone & Pacing]: Friendly, energetic, engaging product presentation.
+  1010	[Camera]: Medium shot, static eye-level camera, framing presenter and product.
+  1011	[Lighting]: Soft, bright studio lighting, even illumination.
+  1012	[Actions]:
+  1013	- [Detailed physical actions, hand movements, or product holding in English]
+  1014	- **Dialogue**: "[Exact line or voice-over script in Indonesian for this clip segment]"
+  1015	[Background Sound]: Clear Indonesian voiceover with upbeat background music.
+  1016	[Transition / Editing]: Single continuous shot.
+  1017	[Call to Action]: Recommending product or action if applicable for this clip segment.
+  1018	\`\`\``);
+  1019	
+  1020	        currentSec = nextSec;
+  1021	      }
+  1022	      const timestampTemplateText = timestampGuideList.join('\n');
+  1023	
+  1024	      // =========================================================================
+  1025	      // TAHAP 0 — AEO QUERY MODE ROUTER
+  1026	      // =========================================================================
+  1027	      logger.info(`[Content Ideas Stage 0] AEO Query Router. Mode: ${aeoQueryMode}`);
+  1028	
+  1029	      // =========================================================================
+  1030	      // TAHAP 1 — ANALISIS KONTEKS VISUAL VIDEO (REUSE LOGIC ANALYZER VIDEO)
+  1031	      // =========================================================================
+  1032	      logger.info('[Content Ideas Stage 1] Menganalisis elemen visual asli video...');
+  1033	      let groundingContext = '';
+  1034	
+  1035	      if (base64Data) {
+  1036	        const stage1Prompt = `Anda adalah AI Video Vision Analyzer tingkat presisi tinggi.
+  1037	TUGAS TAHAP 1: Analisis video ini dari detik awal sampai akhir secara objektif tanpa mengarang.
+  1038	Ekstrak struktur data internal faktual berikut:
+  1039	1. Objek/Produk yang BENAR-BENAR terlihat di frame (nama barang, warna, bahan, detail visual unik, kancing, motif, kerah, jahitan, packaging).
+  1040	2. Aksi Tangan / Orang yang BENAR-BENAR terjadi (misal: memegang kerah, membalik lengan baju, menunjuk detail kancing, mengoleskan krim, membuka kemasan, mengangkat barang ke kamera).
+  1041	3. Environment / Setting Asli Video (ruang tamu, kamar, studio, latar belakang, lighting, suasana).
+  1042	4. Ekspresi & Gesture yang Terlihat (apabila ada orang/presenter di video).
+  1043	5. Transkrip Audio / Teks Terdeteksi (jika ada suara/VO/teks asli di video).
+  1044	
+  1045	JIKA ADA BAGIAN DETAIL YANG TIDAK JELAS ATAU TIDAK TERDETEKSI: Tandai eksplisit sebagai "[Kurang yakin / Tidak terdeteksi jelas]". JANGAN PERNAH MENGARANG AKSI ATAU PRODUK YANG TIDAK ADA.`;
+  1046	
+  1047	        const stage1Payload = {
+  1048	          contents: {
+  1049	            parts: [
+  1050	              {
+  1051	                inlineData: {
+  1052	                  mimeType: mimeType || 'video/mp4',
+  1053	                  data: base64Data,
+  1054	                },
+  1055	              },
+  1056	              {
+  1057	                text: `${stage1Prompt}\n\nJudul/Caption Video: ${sourceTitle || '-'}\nCatatan Tambahan: ${topic || '-'}`,
+  1058	              },
+  1059	            ],
+  1060	          },
+  1061	          config: {
+  1062	            systemInstruction:
+  1063	              "You are an objective video vision analyzer. Extract exact physical actions, visible objects, gestures, and settings without hallucinating or making assumptions.",
+  1064	          },
+  1065	        };
+  1066	
+  1067	        const targetTier = getInitialTierForTask(aeoQueryMode, !!base64Data);
+  1068	
+  1069	        const stage1Result = await callGeminiWithFallback(userSelectedModel, stage1Payload, customApiKey, clientAccessCode, targetTier);
+  1070	        groundingContext = stage1Result.text;
+  1071	      } else {
+  1072	        groundingContext = `INFORMASI INPUT TEKS USER (Tanpa Video File):
+  1073	- Judul/Caption Video: ${sourceTitle || '-'}
+  1074	- Topik / Produk: ${topic || '-'}`;
+  1075	      }
+  1076	
+  1077	      logger.info('[Content Ideas Stage 1 Complete] Grounding context extracted.');
+  1078	
+  1079	      let identityAnchorDescription = '';
+  1080	      if (referenceImageBase64) {
+  1081	        logger.info('[Content Ideas Stage 1.5] Reference Image Anchor Extraction...');
+  1082	        const anchorPrompt = `Anda adalah AI Identity Extractor. Analisis gambar referensi ini secara presisi.
+  1083	Ekstrak 'Identity Anchor' yang solid (seperti warna kulit, pakaian, bentuk wajah, tekstur barang, atau logo pada produk).
+  1084	Deskripsi ini akan disalin persis ke prompt video generation untuk mencegah flickering identitas antar adegan.
+  1085	Hasilkan HANYA 1 paragraf padat berbahasa Inggris yang mendeskripsikan secara jelas ciri khas subjek/produk utama di gambar ini.`;
+  1086	
+  1087	        const anchorPayload = {
+  1088	          contents: {
+  1089	            parts: [
+  1090	              {
+  1091	                inlineData: {
+  1092	                  mimeType: referenceImageMimeType || 'image/jpeg',
+  1093	                  data: referenceImageBase64,
+  1094	                },
+  1095	              },
+  1096	              {
+  1097	                text: anchorPrompt,
+  1098	              },
+  1099	            ],
+  1100	          },
+  1101	        };
+  1102	        const anchorResult = await callGeminiWithFallback('gemini-3.6-flash', anchorPayload, customApiKey, clientAccessCode);
+  1103	        identityAnchorDescription = anchorResult?.text?.trim() || '';
+  1104	        logger.info('[Content Ideas Stage 1.5 Complete] Identity Anchor extracted:', identityAnchorDescription);
+  1105	      }
+  1106	
+  1107	      // =========================================================================
+  1108	      // TAHAP 1.8 — DEWAN 10 AI AGENT QUERY (INDONESIAN QUERY COUNCIL)
+  1109	      // =========================================================================
+  1110	      let queryCouncilResult: any = { final_short_query_targets: [], final_long_tail_queries: [] };
+  1111	      let isCouncilSuccessful = false;
+  1112	
+  1113	      // H1 Optimization: Skip council if user provides a rich set of seed queries (>= 5)
+  1114	      // This saves cost and latency. We will use the seed queries directly as the final targets.
+  1115	      if (userSeedQueriesClean.length >= 5) {
+  1116	          logger.info(`[Content Ideas Stage 1.8] Skipping Query Council because user provided ${userSeedQueriesClean.length} seed queries.`);
+  1117	          queryCouncilResult = {
+  1118	              final_short_query_targets: userSeedQueriesClean.filter(q => q.split(' ').length <= 4),
+  1119	              final_long_tail_queries: userSeedQueriesClean.filter(q => q.split(' ').length > 4)
+  1120	          };
+  1121	          // Fallback if filtering resulted in empty array for one of them
+  1122	          if (queryCouncilResult.final_short_query_targets.length === 0) queryCouncilResult.final_short_query_targets = userSeedQueriesClean.slice(0, 3);
+  1123	          if (queryCouncilResult.final_long_tail_queries.length === 0) queryCouncilResult.final_long_tail_queries = userSeedQueriesClean.slice(-3);
+  1124	          isCouncilSuccessful = true;
+  1125	      } else {
+  1126	          logger.info(`[Content Ideas Stage 1.8] Menjalankan Dewan 10 AI Agent Query...`);
+  1127	          try {
+  1128	              const councilTier = getInitialTierForTask(aeoQueryMode, !!base64Data);
+  1129	              queryCouncilResult = await runIndonesianQueryCouncil(
+  1130	                  topic || sourceTitle || '',
+  1131	                  groundingContext,
+  1132	                  userSeedQueriesClean,
+  1133	                  aeoQueryMode,
+  1134	                  callGeminiWithFallback,
+  1135	                  userSelectedModel,
+  1136	                  customApiKey,
+  1137	                  clientAccessCode,
+  1138	                  councilTier
+  1139	              );
+  1140	              isCouncilSuccessful = true;
+  1141	              logger.info(`[Content Ideas Stage 1.8 Complete] Generated ${queryCouncilResult.final_short_query_targets?.length || 0} short and ${queryCouncilResult.final_long_tail_queries?.length || 0} long queries.`);
+  1142	          } catch (err) {
+  1143	              logger.warn("[Stage 1.8] Query Council Agent failed or JSON parse error, falling back to legacy synthetic query generation mode. Error:", err);
+  1144	          }
+  1145	      }
+  1146	
+  1147	      // =========================================================================
+  1148	      // TAHAP 2 — GENERATE 5 IDE KONTEN GROUNDED + ANTI-AI-SLOP VOICE-OVER
+  1149	      // =========================================================================
+  1150	      logger.info('[Content Ideas Stage 2] Menghasilkan 5 ide konten grounded...');
+  1151	      const referenceImageProvided = !!identityAnchorDescription;
+  1152	
+  1153	      const hasCouncilQueries = (queryCouncilResult.final_short_query_targets?.length > 0 || queryCouncilResult.final_long_tail_queries?.length > 0);
+  1154	
+  1155	      const stage2PromptText = `Anda adalah TikTok Content Strategist & Anti-AI-Slop Indonesian Copywriter Spesialis FYP Ranking TikTok Indonesia.
+  1156	
+  1157	TUGAS UTAMA TAHAP 2:
+  1158	Buatkan 5 IDE KONTEN VIRAL SANGAT OPTIMAL, RELEVAN, & PERSUASIF berdasarkan DATA HASIL ANALISIS TAHAP 1 TERLAMPIR.
+  1159	
+  1160	${hasCouncilQueries ? `=== HASIL DEWAN 10 AGENT QUERY TAHAP 0 (WAJIB DIPAKAI, DILARANG MENGARANG QUERY BARU) ===
+  1161	Short Query Targets: ${(queryCouncilResult.final_short_query_targets || []).join(' | ')}
+  1162	Long-Tail Queries: ${(queryCouncilResult.final_long_tail_queries || []).join(' | ')}
+  1163	${userSeedQueriesClean.length > 0 ? `Seed Asli dari User (prioritas tertinggi): ${userSeedQueriesClean.join(' | ')}` : ''}
+  1164	==================================================================
+  1165	
+  1166	ATURAN QUERY FAN-OUT (DIPERKETAT):
+  1167	1. SETIAP query yang dicantumkan di "AEO SYNTHETIC QUERY FAN-OUT" dan di
+  1168	   "AEO Query Mapping" tiap ide WAJIB diambil PERSIS atau nyaris identik dari
+  1169	   daftar Dewan 10 Agent di atas. DILARANG membuat query baru yang tidak ada
+  1170	   di daftar tersebut — ini untuk mencegah halusinasi.` : `=== AEO SYNTHETIC QUERY FAN-OUT & MAPPING ===
+  1171	1. Hasilkan dan cantumkan 5-9 synthetic long-tail queries secara mandiri berdasarkan topik dan konteks yang ada.
+  1172	2. Lakukan "AEO Query Mapping" untuk setiap ide dengan mengaitkannya ke query yang relevan yang telah Anda hasilkan.`}
+  1173	
+  1174	=== DATA GROUNDING FAKTUALL TAHAP 1 (MANDATORI DIIKUTI 100%) ===
+  1175	"""
+  1176	${groundingContext}
+  1177	"""
+  1178	==================================================================
+  1179	
+  1180	PERATURAN MUTLAK GROUNDING & KONSISTENSI 3 ARAH (MANDATORI):
+  1181	1. HOOK, DIALOG/VO, DESKRIPSI AKSI, CAPTION, DAN HASHTAG HARUS MERUJUK PADA ELEMEN VISUAL YANG BENAR-BENAR TERDETEKSI DI DATA TAHAP 1 DAN TOPIK PROFIL USER.
+  1182	2. JANGAN MENGARANG AKSI, PRODUK, ATAU DETAIL YANG TIDAK ADA DI DATA TAHAP 1.
+  1183	3. KONSISTENSI 3 ARAH (Caption, Hashtags, dan Hook/Visual Scene) HARUS SALING MENGUATKAN DENGAN PERFECT MATCH.
+  1184	4. HASHTAG WAJIB MAKSIMAL 5 HASHTAG PER IDE & FOKUS SEO TIKTOK SEARCH ALGORITHM:
+  1185	   - DILARANG KERAS MENGGUNAKAN HASHTAG GENERIK/SAMPAH SEPERTI #fyp, #fypTikTok, #racuntiktok, #viral, #trending, #foryou, #foryoupage, #beranda.
+  1186	   - HASHTAG HARUS SANGAT SPESIFIK & TARGETED BERDASARKAN PRODUK/DETAIL VISUAL DI TAHAP 1 & REFERENSI JUDUL/HASHTAG TIKTOK USER (#1 & #2 Nama Produk/Bahan, #3 & #4 Detail Utama, #5 Niche Audience). Total MAKSIMAL 5 HASHTAG.
+  1187	5. CAPTION RELEVAN TIKTOK HARUS RELEVAN DENGAN IDE & BERISI TEKS PENJUALAN/KETERANGAN VIDEO BAHASA INDONESIA PERSUASIF MANUSIA (DILARANG MEMASUKKAN TAG PROMPT BRACKET SEPERTI [Style] DI DALAM CAPTION!).
+  1188	6. FORMAT PROMPT AI VIDEO PER KLIP WAJIB MENGGUNAKAN SELURUH TAG DALAM KURUNG SIKU SECARA PERSIS SEPERTI CONTOH BERIKUT (DILARANG MENGATUR ULANG ATAU MENGURANGI TAG):
+  1189	\`\`\`text
+  1190	[Style]: Bright, commercial e-commerce product video, clean and polished aesthetic.
+  1191	[Environment]: Indoor studio or showroom with clothes rack, decorative items, and warm ambient lighting.
+  1192	[Tone & Pacing]: Friendly, energetic, engaging product presentation.
+  1193	[Camera]: Medium shot, static eye-level camera, framing presenter and product.
+  1194	[Lighting]: Soft, bright studio lighting, even illumination.
+  1195	[Actions]:
+  1196	- Woman in brown hijab and gamis holds matching dress on a hanger, pointing to details and demonstrating soft fabric quality.
+  1197	- **Dialogue**: "ini dia rekomendasi gamis malaysia simpel murah tapi anggun buat raya nanti, pantesan udah terjual ribuan lebih. bahannya ceruti premium yang halus dan juga adem, tebel, jatuh, ada furing di dalamnya,"
+  1198	[Background Sound]: Clear Indonesian female voiceover with upbeat background music.
+  1199	[Transition / Editing]: Single continuous shot.
+  1200	[Call to Action]: Recommending product or dress.
+  1201	\`\`\`
+  1202	
+  1203	PERATURAN DUKUNGAN KLIP & SPLIT ADEGAN:
+  1204	- WAJIB MEMECAH ADEGAN TEPAT MENJADI ${expectedClipsCount} KLIP (Total Durasi: ${maxSecNum}s, Durasi per Klip: ${segSecNum}s).
+  1205	- IKUTI FORMAT TIMESTAMP SEGMEN BERIKUT SECARA PERSIS:
+  1206	${timestampTemplateText}
+  1207	
+  1208	PERATURAN DOKTRIN ANSWER ENGINE OPTIMIZATION (AEO):
+  1209	${hasCouncilQueries ? `1. QUERY FAN-OUT SYNTHESIS: Cantumkan 5-9 synthetic queries yang DIAMBIL LANGSUNG DARI HASIL DEWAN 10 AGENT di atas di bagian paling atas output.` : `1. QUERY FAN-OUT SYNTHESIS: Cantumkan 5-9 synthetic long-tail queries yang paling mungkin dipicu AI Search Engine (Google AI Overview, ChatGPT Search, Perplexity) terkait topik/produk ini di bagian paling atas output.`}
+  1210	2. BLUFF HOOK (0-3s): Hook 3 detik pertama WAJIB menggunakan metode Bottom Line Up Front (BLUFF) - langsung ke solusi/jawaban utama di detik pertama.
+  1211	3. ATOMIC ANSWER SUMMARY: Setiap ide WAJIB menyertakan 1-2 kalimat fakta utuh & mandiri yang siap dikutip langsung oleh LLM / RAG.
+  1212	4. CONSENSUS TRIGGER: Setiap ide menyertakan pemicu konsensus sosial (Tier 2 Reddit/Review style) untuk memvalidasi ide ini.
+  1213	5. AEO CAPTION SEO: Caption disusun secara terstruktur: Kalimat 1 = BLUFF Answer + Entitas Utama, Kalimat 2-3 = Poin Detail Faktual, Penutup = Q&A Pemicu Diskusi.
+  1214	
+  1215	PERATURAN TAMBAHAN — AEO DUAL-MODE TARGETING (BARU):
+  1216	6. MODE TARGETING AKTIF: ${aeoQueryMode.toUpperCase()} (short | long | both).
+  1217	${hasCouncilQueries ? `   - Jika mode = SHORT: fokuskan seluruh hook, caption, dan atomic answer pada
+  1218	     Short Query Targets dari Dewan (maksimal 4 kata per query, gaya head-term search bar).
+  1219	   - Jika mode = LONG: fokuskan pada Long-Tail Queries dari Dewan.
+  1220	   - Jika mode = BOTH: prioritaskan keduanya secara seimbang.
+  1221	7. SETIAP IDE WAJIB MENYERTAKAN "AEO Query Mapping" yang eksplisit menyebut
+  1222	   query pendek dan/atau query panjang mana DARI DAFTAR DEWAN yang dijawab ide tersebut, plus
+  1223	   1-2 kalimat "Alasan Relevansi" yang menjelaskan koneksinya ke data grounding
+  1224	   Tahap 1 dan ke query yang ditarget.` : `   - Jika mode = SHORT: fokuskan seluruh hook, caption, dan atomic answer pada
+  1225	     3-6 SHORT QUERY TARGETS (maksimal 4 kata per query, gaya head-term search bar).
+  1226	     Tetap sertakan synthetic_fanout_queries tapi tandai non-prioritas.
+  1227	   - Jika mode = LONG: perilaku IDENTIK dengan sistem saat ini (5-9 synthetic
+  1228	     fan-out query konversasional), short_query_targets tetap diisi tapi non-prioritas.
+  1229	   - Jika mode = BOTH: prioritaskan keduanya secara seimbang.
+  1230	7. SETIAP IDE WAJIB MENYERTAKAN "AEO Query Mapping" yang eksplisit menyebut
+  1231	   query pendek dan/atau query panjang mana yang dijawab ide tersebut, plus
+  1232	   1-2 kalimat "Alasan Relevansi" yang menjelaskan koneksinya ke data grounding
+  1233	   Tahap 1 dan ke query yang ditarget.`}
+  1234	
+  1235	PERATURAN TAMBAHAN — KONTROL AUDIO & TEKS (BARU):
+  1236	8. BIG SOUND: ${enableBigSound ? 'AKTIF - boleh rekomendasikan sound/musik trending yang catchy dan energik pada tag [Background Sound].' : 'NONAKTIF - WAJIB gunakan ambience natural halus tanpa efek suara besar/dramatis/trending yang keras pada tag [Background Sound].'}
+  1237	9. TEXT OVERLAY: ${enableTextOverlay ? 'AKTIF - boleh sertakan rekomendasi teks singkat di layar via tag [Text Overlay].' : 'NONAKTIF - WAJIB tambahkan tag [Text Overlay]: NONE - jangan render teks/caption apapun di atas video pada SETIAP klip.'}
+  1238	
+  1239	PERATURAN TAMBAHAN — ANTI-FLICKER NEGATIVE PROMPT (BARU, WAJIB DI SETIAP KLIP):
+  1240	10. SETIAP blok prompt video WAJIB menambahkan tag berikut PERSIS setelah [Call to Action]:
+  1241	\`\`\`text
+  1242	[Negative Prompt]: flickering, flicker, strobing, morphing face, warping identity, inconsistent character design between frames, changing outfit/product color mid-clip, unstable lighting, jittery motion, texture popping, banding artifacts, blurry transition, extra fingers, deformed hands, distorted proportions, watermark, text glitch, double exposure ghosting, low resolution, oversaturated color shift
+  1243	\`\`\`
+  1244	${referenceImageProvided ? `11. REFERENCE IMAGE IDENTITY LOCK AKTIF: gunakan deskripsi identitas berikut secara KONSISTEN kata-demi-kata di setiap [Environment]/[Actions] klip: "${identityAnchorDescription}". Tambahkan baris tambahan di [Negative Prompt]: "jangan menyimpang dari identitas visual reference image (warna, tekstur, bentuk, wajah/model) - pertahankan konsistensi identik di semua klip, hindari perubahan warna/detail antar klip."` : ''}
+  1245	
+  1246	PERATURAN GAYA BAHASA (VOICE-OVER & DIALOG ANTI-AI-SLOP):
+  1247	- Tulis dialog/VO persis seperti orang Indonesia asli ngomong santai di depan kamera HP (kasual, spontan, bernyawa).
+  1248	- Hindari pola AI-slop: kalimat terlalu rapi/simetris, terlalu banyak tanda seru berturut-turut, transisi yang kaku ("Saksikanlah", "Temukanlah", "Solusi terbaik untuk Anda").
+  1249	- Variasikan panjang kalimat. Gunakan kata pengisi natural manusia ("nih", "loh", "kan", "eh", "gila sih", "coba liat deh").
+  1250	- Kalimat hook (3 detik pertama) harus terdengar seperti reaksi spontan manusia terhadap barang/kejadian yang dilihat di layar, BUKAN tagline iklan formal.
+  1251	
+  1252	CONTOH FEW-SHOT GAYA BAHASA:
+  1253	❌ AI-Slop (SALAH): "Temukan outer sempurna yang akan mengubah gaya berpakaian Anda secara total!"
+  1254	✅ Natural (BENAR): "Eh ini outer beneran worth it apa nggak sih? Coba liat dulu deh detail kancingnya."
+  1255	
+  1256	KONFIGURASI TARGET KONTEN:
+  1257	- Target Jenis Konten: ${contentType.toUpperCase()}
+  1258	- Tone Bahasa: ${tone.toUpperCase()}
+  1259	- Target Total Durasi Video: ${maxSecNum} Detik
+  1260	- Jumlah Klip Dihasilkan: ${expectedClipsCount} Klip (${segSecNum} Detik per Klip)
+  1261	- Target Engine AI Video: ${targetAIName}
+  1262	
+  1263	FORMAT OUTPUT (WAJIB PERTAHANKAN STRUKTUR MARKDOWN BERIKUT SECARA PERSIS):
+  1264	
+  1265	# 🚀 5 IDE KONTEN VIRAL & AEO ENGINE OPTIMIZED (${maxSecNum}s, ${expectedClipsCount} Klip)
+  1266	
+  1267	> 🎯 **AEO SYNTHETIC QUERY FAN-OUT (AI SEARCH ENGINE TARGETING)**:
+  1268	> 1. [Sub-query sintetis 1]
+  1269	> 2. [Sub-query sintetis 2]
+  1270	> 3. [Sub-query sintetis 3]
+  1271	> 4. [Sub-query sintetis 4]
+  1272	> 5. [Sub-query sintetis 5]
+  1273	
+  1274	---
+  1275	
+  1276	### 💡 IDE 1: [Judul Ide Konten 1]
+  1277	- **Tipe & Angle Konten**: [Problem-Solution / POV Relatable / Unboxing Soft-Sell / Review Jujur]
+  1278	- **Target Audience**: [Sebutkan audiens target spesifik]
+  1279	- **AEO Query Mapping**: Short → [...], Long → [...]
+  1280	- **Alasan Relevansi**: [1-2 kalimat penjelasan koneksi ke grounding & query target]
+  1281	- **BLUFF Hook Pikat (0-3s)**: "[Kalimat pikat BLUFF - Langsung ke Inti Solusi/Jawaban di 3 detik pertama]"
+  1282	- **Atomic Answer Summary (LLM RAG Citation Ready)**: "[1-2 kalimat fakta mandiri utuh yang siap dikutip AI Search Engine]"
+  1283	- **Consensus Trigger (Tier 2 Validation)**: "[Pemicu validasi sosial / review komunitas untuk membangun konsensus LLM]"
+  1284	- **Panduan Visual & Audio**: [Deskripsi gaya adegan, ekspresi, lighting, rekomendasi sound TikTok]
+  1285	- **Rincian Adegan Video & Prompt AI per Segmen (${maxSecNum} Detik)**:
+  1286	${timestampTemplateText}
+  1287	- **AEO Caption SEO**:
+  1288	"""text
+  1289	[Caption AEO: Kalimat 1 = BLUFF Answer + Entitas Utama, Kalimat 2-3 = Poin Detail Faktual, Penutup = Q&A Pemicu Diskusi]
+  1290	"""
+  1291	- **Hashtag Relevan**: '#HashtagSpesifikVisual1 #HashtagSpesifikVisual2 #HashtagDetail3 #HashtagNiche4 #HashtagTargetSEO5'
+  1292	
+  1293	---
+  1294	
+  1295	### 💡 IDE 2: [Judul Ide Konten 2]
+  1296	- **Tipe & Angle Konten**: [...]
+  1297	- **Target Audience**: [...]
+  1298	- **AEO Query Mapping**: Short → [...], Long → [...]
+  1299	- **Alasan Relevansi**: [...]
+  1300	- **BLUFF Hook Pikat (0-3s)**: "[...]"
+  1301	- **Atomic Answer Summary (LLM RAG Citation Ready)**: "[...]"
+  1302	- **Consensus Trigger (Tier 2 Validation)**: "[...]"
+  1303	- **Panduan Visual & Audio**: [...]
+  1304	- **Rincian Adegan Video & Prompt AI per Segmen (${maxSecNum} Detik)**:
+  1305	${timestampTemplateText}
+  1306	- **AEO Caption SEO**:
+  1307	"""text
+  1308	[...]
+  1309	"""
+  1310	- **Hashtag Relevan**: '#HashtagSpesifikVisual1 #HashtagSpesifikVisual2 #HashtagDetail3 #HashtagNiche4 #HashtagTargetSEO5'
+  1311	
+  1312	---
+  1313	
+  1314	### 💡 IDE 3: [Judul Ide Konten 3]
+  1315	- **Tipe & Angle Konten**: [...]
+  1316	- **Target Audience**: [...]
+  1317	- **AEO Query Mapping**: Short → [...], Long → [...]
+  1318	- **Alasan Relevansi**: [...]
+  1319	- **BLUFF Hook Pikat (0-3s)**: "[...]"
+  1320	- **Atomic Answer Summary (LLM RAG Citation Ready)**: "[...]"
+  1321	- **Consensus Trigger (Tier 2 Validation)**: "[...]"
+  1322	- **Panduan Visual & Audio**: [...]
+  1323	- **Rincian Adegan Video & Prompt AI per Segmen (${maxSecNum} Detik)**:
+  1324	${timestampTemplateText}
+  1325	- **AEO Caption SEO**:
+  1326	"""text
+  1327	[...]
+  1328	"""
+  1329	- **Hashtag Relevan**: '#HashtagSpesifikVisual1 #HashtagSpesifikVisual2 #HashtagDetail3 #HashtagNiche4 #HashtagTargetSEO5'
+  1330	
+  1331	---
+  1332	
+  1333	### 💡 IDE 4: [Judul Ide Konten 4]
+  1334	- **Tipe & Angle Konten**: [...]
+  1335	- **Target Audience**: [...]
+  1336	- **AEO Query Mapping**: Short → [...], Long → [...]
+  1337	- **Alasan Relevansi**: [...]
+  1338	- **BLUFF Hook Pikat (0-3s)**: "[...]"
+  1339	- **Atomic Answer Summary (LLM RAG Citation Ready)**: "[...]"
+  1340	- **Consensus Trigger (Tier 2 Validation)**: "[...]"
+  1341	- **Panduan Visual & Audio**: [...]
+  1342	- **Rincian Adegan Video & Prompt AI per Segmen (${maxSecNum} Detik)**:
+  1343	${timestampTemplateText}
+  1344	- **AEO Caption SEO**:
+  1345	"""text
+  1346	[...]
+  1347	"""
+  1348	- **Hashtag Relevan**: '#HashtagSpesifikVisual1 #HashtagSpesifikVisual2 #HashtagDetail3 #HashtagNiche4 #HashtagTargetSEO5'
+  1349	
+  1350	---
+  1351	
+  1352	### 💡 IDE 5: [Judul Ide Konten 5]
+  1353	- **Tipe & Angle Konten**: [...]
+  1354	- **Target Audience**: [...]
+  1355	- **AEO Query Mapping**: Short → [...], Long → [...]
+  1356	- **Alasan Relevansi**: [...]
+  1357	- **BLUFF Hook Pikat (0-3s)**: "[...]"
+  1358	- **Atomic Answer Summary (LLM RAG Citation Ready)**: "[...]"
+  1359	- **Consensus Trigger (Tier 2 Validation)**: "[...]"
+  1360	- **Panduan Visual & Audio**: [...]
+  1361	- **Rincian Adegan Video & Prompt AI per Segmen (${maxSecNum} Detik)**:
+  1362	${timestampTemplateText}
+  1363	- **AEO Caption SEO**:
+  1364	"""text
+  1365	[...]
+  1366	"""
+  1367	- **Hashtag Relevan**: '#HashtagSpesifikVisual1 #HashtagSpesifikVisual2 #HashtagNiche3 #HashtagNiche4 #FYPTikTok'`;
+  1368	
+  1369	      const stage2Payload = {
+  1370	        contents: {
+  1371	          parts: [
+  1372	            {
+  1373	              text: stage2PromptText,
+  1374	            },
+  1375	          ],
+  1376	        },
+  1377	        config: {
+  1378	          systemInstruction:
+  1379	            "You are a master Indonesian short-form content and Answer Engine Optimization (AEO) strategist. You combine viral video engagement with AEO doctrines (Query Fan-Out, BLUFF 0-3s hook, Atomic Answer Summaries, and Consensus triggers). You strictly avoid corporate AI-slop voice-overs and write like a real human speaking naturally on camera. Every idea must be grounded 100% in the provided Stage 1 visual video analysis data without hallucination.",
+  1380	        },
+  1381	      };
+  1382	
+  1383	      const stage2Result = await callGeminiWithFallback(userSelectedModel, stage2Payload, customApiKey, clientAccessCode);
+  1384	      let finalOutputText = stage2Result.text;
+  1385	
+  1386	      // M2 Validation: Cross-check synthetic queries against Council Queries
+  1387	      if (isCouncilSuccessful && (queryCouncilResult.final_short_query_targets?.length > 0 || queryCouncilResult.final_long_tail_queries?.length > 0)) {
+  1388	         try {
+  1389	             const fanoutMatch = finalOutputText.match(/AEO SYNTHETIC QUERY FAN-OUT.*?:([\s\S]*?)(?:---|###)/i);
+  1390	             if (fanoutMatch) {
+  1391	                 const extractedQueries = fanoutMatch[1].split('\n').filter(l => l.trim().length > 0 && l.trim().match(/^\d+\./));
+  1392	                 let matchCount = 0;
+  1393	                 const allCouncil = [...(queryCouncilResult.final_short_query_targets || []), ...(queryCouncilResult.final_long_tail_queries || [])].map(q => q.toLowerCase());
+  1394	                 extractedQueries.forEach(eq => {
+  1395	                     const cleanEq = eq.replace(/^\d+\.\s*/, '').replace(/\[|\]/g, '').toLowerCase().trim();
+  1396	                     if (allCouncil.some(cq => cleanEq.includes(cq) || cq.includes(cleanEq))) matchCount++;
+  1397	                 });
+  1398	                 if (matchCount < (extractedQueries.length / 2)) {
+  1399	                     logger.warn(`[AEO Validation] Warning: Many synthetic queries in Stage 2 output do not match Council targets. Matched ${matchCount} out of ${extractedQueries.length}.`);
+  1400	                 } else {
+  1401	                     logger.info(`[AEO Validation] Stage 2 synthetic queries match Council targets well (${matchCount}/${extractedQueries.length}).`);
+  1402	                 }
+  1403	             }
+  1404	         } catch (e) {
+  1405	             logger.warn('[AEO Validation] Failed to perform M2 validation check:', e);
+  1406	         }
+  1407	      }
+  1408	
+  1409	      // =========================================================================
+  1410	      // VALIDASI CROSS-CHECK AUTOMATED DENGAN GROUNDING DATA TAHAP 1
+  1411	      // =========================================================================
+  1412	      logger.info('[Content Ideas Validation] Cross-checking generated output against visual facts...');
+  1413	      const validationPayload = {
+  1414	        contents: {
+  1415	          parts: [
+  1416	            {
+  1417	              text: `BERIKUT DATA ANALISIS VISUAL TAHAP 1:
+  1418	"""
+  1419	${groundingContext}
+  1420	"""
+  1421	
+  1422	BERIKUT HASIL 5 IDE KONTEN YANG DI-GENERATE TAHAP 2:
+  1423	"""
+  1424	${finalOutputText}
+  1425	"""
+  1426	
+  1427	TUGAS VALIDASI:
+  1428	Lakukan verifikasi cross-check singkat. Apakah ada klaim aksi/produk di Tahap 2 yang sama sekali bertentangan dengan fakta visual Tahap 1?
+  1429	- Jika hasil Tahap 2 sudah grounded dan sesuai dengan data visual, kembalikan teks Tahap 2 APA ADANYA tanpa diubah.
+  1430	- Jika ada kesalahan/halusinasi fatal, perbaiki kalimat aksi/produk tersebut agar 100% sesuai dengan fakta visual Tahap 1, lalu kembalikan teks utuh yang sudah diperbaiki.`,
+  1431	            },
+  1432	          ],
+  1433	        },
+  1434	        config: {
+  1435	          systemInstruction:
+  1436	            "You are a factual consistency cross-checker. Ensure generated copy does not contradict video visual evidence.",
+  1437	        },
+  1438	      };
+  1439	
+  1440	      try {
+  1441	        const validatedResult = await callGeminiWithFallback(userSelectedModel, validationPayload, customApiKey, clientAccessCode);
+  1442	        if (validatedResult?.text && validatedResult.text.includes('# 🚀 5 IDE KONTEN VIRAL')) {
+  1443	          finalOutputText = validatedResult.text;
+  1444	        }
+  1445	      } catch (valErr) {
+  1446	        logger.warn('[Validation Warning] Fast validation skipped or fallback to Stage 2 text:', valErr);
+  1447	      }
+  1448	
+  1449	      // Record successful execution & train system memory
+  1450	      recordExecutionAndUpgrade('contentIdeas');
+  1451	
+  1452	      activeTask.status = 'completed';
+  1453	      activeTask.updatedAt = Date.now();
+  1454	      activeGenerationsMap.set(taskId, activeTask);
+  1455	
+  1456	      broadcastLiveEvent({
+  1457	        type: 'active_status_update',
+  1458	        activeGenerations: Array.from(activeGenerationsMap.values()),
+  1459	        activeUserCount: sseClients.size,
+  1460	      });
+  1461	
+  1462	      setTimeout(() => {
+  1463	        activeGenerationsMap.delete(taskId);
+  1464	        broadcastLiveEvent({
+  1465	          type: 'active_status_update',
+  1466	          activeGenerations: Array.from(activeGenerationsMap.values()),
+  1467	          activeUserCount: sseClients.size,
+  1468	        });
+  1469	      }, 120000);
+  1470	
+  1471	      if (useCache) {
+  1472	        promptResponseCache.set(cacheKey, { timestamp: Date.now(), text: finalOutputText, modelUsed: stage2Result.modelUsed });
+  1473	      }
+  1474	
+  1475	      res.json({ result: finalOutputText, modelUsed: stage2Result.modelUsed });
+  1476	    } catch (error: any) {
+  1477	      logger.error('Error generating content ideas:', error);
+  1478	      const statusCode = error.statusCode || 500;
+  1479	      res.status(statusCode).json({ error: error.message || 'Terjadi kesalahan saat membuat ide konten.' });
+  1480	    }
+  1481	  });
+  1482	
+  1483	  // API endpoint for Backend System Intelligence Status & Memory Metrics
+  1484	  app.get('/api/system-intelligence', (req, res) => {
+  1485	    const intel = getSystemIntelligenceLevel();
+  1486	    res.json({
+  1487	      status: 'active',
+  1488	      intelligence: intel,
+  1489	      thinkingMode: 'Gemini 3.1 Pro High Thinking Active',
+  1490	      memoryFile: MEMORY_FILE_PATH,
+  1491	    });
+  1492	  });
+  1493	
+  1494	  // API endpoint for Realtime Batched Auto-Learning Memory Worker (Sync every 3 seconds)
+  1495	  app.post('/api/backend/learn', (req, res) => {
+  1496	    try {
+  1497	      const { events } = req.body;
+  1498	      if (!Array.isArray(events) || events.length === 0) {
+  1499	        return res.json({ success: true, processedEventsCount: 0, intelligence: getSystemIntelligenceLevel() });
+  1500	      }
+  1501	
+  1502	      if (!Array.isArray(systemMemory.formulas)) {
+  1503	        systemMemory.formulas = [];
+  1504	      }
+  1505	
+  1506	      let newInsightsAdded = 0;
+  1507	
+  1508	      for (const evt of events) {
+  1509	        const { type, payload } = evt;
+  1510	
+  1511	        if (type === 'video_uploaded') {
+  1512	          if (payload?.fileName) {
+  1513	            logger.info(`[Event Analytics] Video uploaded: ${payload.fileName} (${payload.fileSize || 0} bytes)`);
+  1514	          }
+  1515	        } else if (type === 'split_duration_selected') {
+  1516	          logger.info(`[Event Analytics] Duration selected: ${payload?.duration}`);
+  1517	        } else if (type === 'ai_engine_selected') {
+  1518	          logger.info(`[Event Analytics] Engine selected: ${payload?.model}`);
+  1519	        } else if (type === 'detail_element_toggled') {
+  1520	          logger.info(`[Event Analytics] Detail element toggled: ${payload?.element} = ${payload?.enabled}`);
+  1521	        } else if (type === 'prompt_split_generated') {
+  1522	          const params = payload?.parameters || payload || {};
+  1523	          const duration = params.segmentDuration || '10';
+  1524	          const model = params.selectedModel || params.model || 'gemini-3.6-flash';
+  1525	          const act = params.includeActions !== false;
+  1526	          const vo = params.includeVoiceOver !== false;
+  1527	          const cine = params.includeCinematics !== false;
+  1528	
+  1529	          const elementsList: string[] = [];
+  1530	          if (act) elementsList.push('Aksi&Gerakan');
+  1531	          if (vo) elementsList.push('Transkrip VO');
+  1532	          if (cine) elementsList.push('Kamera&Lighting');
+  1533	
+  1534	          const formulaKey = `formula_${duration}_${model}_${act ? '1' : '0'}_${vo ? '1' : '0'}_${cine ? '1' : '0'}`;
+  1535	          const formulaPattern = `Formula Pecah ${duration !== 'auto' ? duration + 's' : 'Penuh'} • ${model} • [${elementsList.join(', ')}]`;
+  1536	
+  1537	          let existingFormula = systemMemory.formulas.find((f: any) => f.id === formulaKey);
+  1538	
+  1539	          if (!existingFormula) {
+  1540	            existingFormula = {
+  1541	              id: formulaKey,
+  1542	              pattern: formulaPattern,
+  1543	              segmentDuration: duration,
+  1544	              model: model,
+  1545	              elements: elementsList,
+  1546	              confidenceScore: 1,
+  1547	              createdAt: Date.now(),
+  1548	              lastUsedAt: Date.now(),
+  1549	            };
+  1550	            systemMemory.formulas.push(existingFormula);
+  1551	
+  1552	            const insight = `Formula Baru Teridentifikasi: ${formulaPattern}`;
+  1553	            if (!systemMemory.learnedKnowledgeBase.includes(insight)) {
+  1554	              systemMemory.learnedKnowledgeBase.push(insight);
+  1555	              newInsightsAdded++;
+  1556	            }
+  1557	          } else {
+  1558	            existingFormula.lastUsedAt = Date.now();
+  1559	            existingFormula.confidenceScore += 1;
+  1560	          }
+  1561	
+  1562	          // Counter "Proyek Diproses" dinaikkan SETELAH formula berhasil tersimpan di memori
+  1563	          systemMemory.totalExecutions += 1;
+  1564	          systemMemory.successfulPromptsCount += 1;
+  1565	          systemMemory.categoryUsage.videoPrompt = (systemMemory.categoryUsage.videoPrompt || 0) + 1;
+  1566	
+  1567	        } else if (type === 'prompt_clip_copied' || type === 'prompt_sent_to_photo') {
+  1568	          systemMemory.successfulPromptsCount += 1;
+  1569	          const isSentToPhoto = type === 'prompt_sent_to_photo';
+  1570	          const boost = isSentToPhoto ? 5 : 2;
+  1571	
+  1572	          if (systemMemory.formulas.length > 0) {
+  1573	            const targetFormula = systemMemory.formulas.find((f: any) => f.segmentDuration === payload?.segmentDuration) || systemMemory.formulas[systemMemory.formulas.length - 1];
+  1574	            if (targetFormula) {
+  1575	              targetFormula.confidenceScore = (targetFormula.confidenceScore || 1) + boost;
+  1576	              const insight = `Formula Validasi AI (+Confidence ${targetFormula.confidenceScore}): ${targetFormula.pattern}`;
+  1577	              if (!systemMemory.learnedKnowledgeBase.includes(insight) && targetFormula.confidenceScore >= 3) {
+  1578	                systemMemory.learnedKnowledgeBase.push(insight);
+  1579	                newInsightsAdded++;
+  1580	              }
+  1581	            }
+  1582	          }
+  1583	
+  1584	          if (payload?.promptSnippet || payload?.text) {
+  1585	            const rawTxt = payload.promptSnippet || payload.text;
+  1586	            const shortSnippet = String(rawTxt).slice(0, 100).replace(/\n/g, ' ');
+  1587	            const insight = `${isSentToPhoto ? 'Lanjut ke Prompt Foto' : 'Prompt Klip Dicopy'}: "${shortSnippet}..."`;
+  1588	            if (!systemMemory.learnedKnowledgeBase.includes(insight)) {
+  1589	              systemMemory.learnedKnowledgeBase.push(insight);
+  1590	              newInsightsAdded++;
+  1591	            }
+  1592	          }
+  1593	        } else if (type === 'link_pasted') {
+  1594	          systemMemory.totalExecutions += 1;
+  1595	        } else if (type === 'video_downloaded') {
+  1596	          systemMemory.totalExecutions += 1;
+  1597	          systemMemory.successfulPromptsCount += 1;
+  1598	        } else if (type === 'content_ideas_generated') {
+  1599	          recordExecutionAndUpgrade('contentIdeas');
+  1600	        } else if (type === 'video_prompt_generated') {
+  1601	          recordExecutionAndUpgrade('videoPrompt');
+  1602	        } else if (type === 'photo_prompt_generated') {
+  1603	          recordExecutionAndUpgrade('photoPrompt');
+  1604	        } else if (type === 'prompt_copied') {
+  1605	          systemMemory.successfulPromptsCount += 1;
+  1606	          if (payload?.text && typeof payload.text === 'string' && payload.text.length > 10) {
+  1607	            const shortSnippet = payload.text.slice(0, 100).replace(/\n/g, ' ');
+  1608	            const insight = `Pola Sukses (Dicopy User): "${shortSnippet}..."`;
+  1609	            if (!systemMemory.learnedKnowledgeBase.includes(insight)) {
+  1610	              systemMemory.learnedKnowledgeBase.push(insight);
+  1611	              newInsightsAdded++;
+  1612	            }
+  1613	          }
+  1614	        } else if (type === 'prompt_edited_manually') {
+  1615	          if (payload?.editedText && typeof payload.editedText === 'string') {
+  1616	            const shortSnippet = payload.editedText.slice(0, 100).replace(/\n/g, ' ');
+  1617	            const insight = `Penyesuaian Manual User: "${shortSnippet}..."`;
+  1618	            if (!systemMemory.learnedKnowledgeBase.includes(insight)) {
+  1619	              systemMemory.learnedKnowledgeBase.push(insight);
+  1620	              newInsightsAdded++;
+  1621	            }
+  1622	          }
+  1623	        } else if (type === 'formula_injected') {
+  1624	          if (payload?.insight && typeof payload.insight === 'string' && payload.insight.trim()) {
+  1625	            recordExecutionAndUpgrade('contentIdeas', payload.insight.trim());
+  1626	            newInsightsAdded++;
+  1627	          }
+  1628	        }
+  1629	      }
+  1630	
+  1631	      saveSystemMemory();
+  1632	
+  1633	      return res.json({
+  1634	        success: true,
+  1635	        processedEventsCount: events.length,
+  1636	        newInsightsAdded,
+  1637	        intelligence: getSystemIntelligenceLevel(),
+  1638	      });
+  1639	    } catch (e: any) {
+  1640	      logger.warn('[Realtime Auto-Learning] Error processing batch events:', e);
+  1641	      return res.status(500).json({ error: e.message || 'Gagal memproses event pembelajaran' });
+  1642	    }
+  1643	  });
+  1644	
+  1645	  // API endpoint to submit user feedback or custom prompt learning insight
+  1646	  app.post('/api/learn-feedback', (req, res) => {
+  1647	    try {
+  1648	      const { insight, type = 'contentIdeas' } = req.body;
+  1649	      if (insight && typeof insight === 'string' && insight.trim()) {
+  1650	        recordExecutionAndUpgrade(type, insight.trim());
+  1651	        return res.json({ success: true, intelligence: getSystemIntelligenceLevel() });
+  1652	      }
+  1653	      res.status(400).json({ error: 'Insight teks tidak valid' });
+  1654	    } catch (e: any) {
+  1655	      res.status(500).json({ error: e.message || 'Gagal menyimpan feedback pemikiran' });
+  1656	    }
+  1657	  });
+  1658	
+  1659	  // 1-Hour Server-side Background Auto-Trainer Engine
+  1660	  function initServerAutoTrainerScheduler() {
+  1661	    logger.info('[Auto-Trainer Engine 24/7] Scheduler started. Running every 1 hour...');
+  1662	
+  1663	    const runTrainerPass = () => {
+  1664	      try {
+  1665	        logger.info('[Auto-Trainer Engine 24/7] Running 1-Hour Automated Knowledge Pass...');
+  1666	        const events = await loadEventsServer();
+  1667	        let newlyLearned = 0;
+  1668	
+  1669	        events.forEach((evt) => {
+  1670	          // Exclude herbal_kesehatan from auto-merging
+  1671	          if (evt.category === 'herbal_kesehatan') {
+  1672	            return;
+  1673	          }
+  1674	
+  1675	          if (evt.payload && evt.payload.insight) {
+  1676	            const insight = String(evt.payload.insight).trim();
+  1677	            if (insight && !systemMemory.learnedKnowledgeBase.includes(insight)) {
+  1678	              systemMemory.learnedKnowledgeBase.push(insight);
+  1679	              newlyLearned++;
+  1680	            }
+  1681	          }
+  1682	        });
+  1683	
+  1684	        systemMemory.lastUpdated = new Date().toISOString();
+  1685	        saveSystemMemory();
+  1686	
+  1687	        logger.info(`[Auto-Trainer Engine 24/7] Pass completed. +${newlyLearned} new patterns merged. Total Knowledge Base: ${systemMemory.learnedKnowledgeBase.length}`);
+  1688	      } catch (err) {
+  1689	        logger.warn('[Auto-Trainer Engine 24/7] Error in background pass:', err);
+  1690	      }
+  1691	    };
+  1692	
+  1693	    // Run initial pass 10s after server boot
+  1694	    setTimeout(runTrainerPass, 10000);
+  1695	
+  1696	    // Repeat every 1 hour (3600000 ms)
+  1697	    setInterval(runTrainerPass, 3600000);
+  1698	  }
+  1699	
+  1700	  initServerAutoTrainerScheduler();
+  1701	
+  1702	  // API endpoint for TikTok Video Info Downloader with Cache & Multi-Fallback
+  1703	  app.post('/api/tiktok/info', async (req, res) => {
+  1704	    try {
+  1705	      const { url } = req.body;
+  1706	      if (!url || typeof url !== 'string') {
+  1707	        return res.status(400).json({ error: 'URL TikTok tidak boleh kosong' });
+  1708	      }
+  1709	
+  1710	      const cleanUrl = url.trim();
+  1711	
+  1712	      // Check Cache
+  1713	      const cached = tiktokCache.get(cleanUrl);
+  1714	      if (cached && Date.now() - cached.timestamp < TIKTOK_CACHE_TTL_MS) {
+  1715	        logger.info('[TikTok Cache Hit]', cleanUrl);
+  1716	        return res.json(cached.data);
+  1717	      }
+  1718	
+  1719	      // Provider 1: TikWM
+  1720	      try {
+  1721	        const response = await fetch(`https://www.tikwm.com/api/?url=${encodeURIComponent(cleanUrl)}&hd=1`, {
+  1722	          headers: {
+  1723	            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  1724	            'Accept': 'application/json, text/plain, */*',
+  1725	          }
+  1726	        });
+  1727	
+  1728	        const data = await response.json();
+  1729	
+  1730	        if (data && data.code === 0 && data.data) {
+  1731	          const v = data.data;
+  1732	          const result = {
+  1733	            id: v.id,
+  1734	            title: v.title || 'TikTok Video',
+  1735	            cover: v.cover || v.origin_cover,
+  1736	            play: v.play, // No watermark video URL
+  1737	            wmplay: v.wmplay, // Watermarked video URL
+  1738	            hdplay: v.hdplay || v.play, // HD video URL
+  1739	            music: v.music, // Audio URL
+  1740	            musicTitle: v.music_info?.title || 'Original Audio',
+  1741	            musicAuthor: v.music_info?.author || v.author?.nickname || '',
+  1742	            author: {
+  1743	              id: v.author?.id,
+  1744	              uniqueId: v.author?.unique_id,
+  1745	              nickname: v.author?.nickname,
+  1746	              avatar: v.author?.avatar,
+  1747	            },
+  1748	            stats: {
+  1749	              playCount: v.play_count || 0,
+  1750	              diggCount: v.digg_count || 0,
+  1751	              commentCount: v.comment_count || 0,
+  1752	              shareCount: v.share_count || 0,
+  1753	            },
+  1754	            images: v.images || null,
+  1755	          };
+  1756	
+  1757	          tiktokCache.set(cleanUrl, { timestamp: Date.now(), data: result });
+  1758	          return res.json(result);
+  1759	        }
+  1760	      } catch (e) {
+  1761	        logger.warn('TikWM API failed, trying fallback...', e);
+  1762	      }
+  1763	
+  1764	      // Provider 2: Tiklydown
+  1765	      try {
+  1766	        const fallbackRes = await fetch(`https://api.tiklydown.eu.org/api/download?url=${encodeURIComponent(cleanUrl)}`);
+  1767	        const fallbackData = await fallbackRes.json();
+  1768	        if (fallbackData && (fallbackData.video || fallbackData.url)) {
+  1769	          const result = {
+  1770	            id: fallbackData.id || String(Date.now()),
+  1771	            title: fallbackData.title || fallbackData.video?.caption || 'TikTok Video',
+  1772	            cover: fallbackData.cover || fallbackData.video?.cover,
+  1773	            play: fallbackData.video?.noWatermark || fallbackData.url,
+  1774	            wmplay: fallbackData.video?.watermark || fallbackData.url,
+  1775	            hdplay: fallbackData.video?.noWatermark || fallbackData.url,
+  1776	            music: fallbackData.music?.url || fallbackData.audio,
+  1777	            musicTitle: fallbackData.music?.title || 'Original Audio',
+  1778	            musicAuthor: fallbackData.music?.author || '',
+  1779	            author: {
+  1780	              id: fallbackData.author?.id || '',
+  1781	              uniqueId: fallbackData.author?.unique_id || fallbackData.author?.username || 'user',
+  1782	              nickname: fallbackData.author?.nickname || fallbackData.author?.name || 'TikTok User',
+  1783	              avatar: fallbackData.author?.avatar || '',
+  1784	            },
+  1785	            stats: {
+  1786	              playCount: fallbackData.stats?.playCount || 0,
+  1787	              diggCount: fallbackData.stats?.likeCount || 0,
+  1788	              commentCount: fallbackData.stats?.commentCount || 0,
+  1789	              shareCount: fallbackData.stats?.shareCount || 0,
+  1790	            },
+  1791	            images: fallbackData.images || null,
+  1792	          };
+  1793	
+  1794	          tiktokCache.set(cleanUrl, { timestamp: Date.now(), data: result });
+  1795	          return res.json(result);
+  1796	        }
+  1797	      } catch (e) {
+  1798	        logger.warn('Tiklydown API failed:', e);
+  1799	      }
+  1800	
+  1801	      return res.status(404).json({
+  1802	        error: 'Gagal mengambil informasi video TikTok. Pastikan URL video publik & valid.'
+  1803	      });
+  1804	
+  1805	    } catch (error: any) {
+  1806	      logger.error('TikTok downloader error:', error);
+  1807	      res.status(500).json({ error: 'Terjadi kesalahan saat memproses tautan TikTok.' });
+  1808	    }
+  1809	  });
+  1810	
+  1811	  // API endpoint for streaming/proxying media to bypass CORS and force download
+  1812	  app.get('/api/tiktok/proxy', async (req, res) => {
+  1813	    try {
+  1814	      const mediaUrl = req.query.url as string;
+  1815	      const filename = (req.query.filename as string) || 'tiktok_media.mp4';
+  1816	      const isDownload = req.query.download === 'true';
+  1817	
+  1818	      if (!mediaUrl) {
+  1819	        return res.status(400).send('URL query parameter is required');
+  1820	      }
+  1821	
+  1822	      const mediaRes = await fetch(mediaUrl, {
+  1823	        headers: {
+  1824	          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  1825	          'Referer': 'https://www.tiktok.com/',
+  1826	        }
+  1827	      });
+  1828	
+  1829	      if (!mediaRes.ok) {
+  1830	        return res.status(mediaRes.status).send('Gagal mengambil file media');
+  1831	      }
+  1832	
+  1833	      const contentType = mediaRes.headers.get('content-type') || (filename.endsWith('.mp3') ? 'audio/mpeg' : 'video/mp4');
+  1834	      res.setHeader('Content-Type', contentType);
+  1835	
+  1836	      if (isDownload) {
+  1837	        res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
+  1838	      }
+  1839	
+  1840	      const arrayBuffer = await mediaRes.arrayBuffer();
+  1841	      res.send(Buffer.from(arrayBuffer));
+  1842	    } catch (error: any) {
+  1843	      logger.error('Proxy media error:', error);
+  1844	      res.status(500).send('Media proxy error');
+  1845	    }
+  1846	  });
+  1847	
+  1848	  // [REALTIME-FIX] --- TRACKING, SSE, LONG-POLLING & PERSISTENCE ENGINE ---
+  1849	  interface SSEClientMeta {
+  1850	    res: any;
+  1851	    token: string;
+  1852	    connectedAt: number;
+  1853	  }
+  1854	
+  1855	  const sseClients = new Set<SSEClientMeta>();
+  1856	  const activeGenerationsMap = new Map<string, any>();
+  1857	  const ACTIVE_GENS_FILE_PATH = path.join(process.cwd(), 'active_generations.json');
+  1858	
+  1859	  // Load Active Generations on boot
+  1860	  async function loadActiveGenerationsServer() {
+  1861	    try {
+  1862	      const data = await dbGetActiveGenerations();
+  1863	      if (Array.isArray(data?.list)) {
+  1864	        for (const item of data.list) {
+  1865	          activeGenerationsMap.set(item.taskId, item);
+  1866	        }
+  1867	      }
+  1868	    } catch (e) {
+  1869	      logger.warn('[ActiveGen Persistence] Error reading file:', e);
+  1870	    }
+  1871	  }
+  1872	
+  1873	  async function saveActiveGenerationsServer() {
+  1874	    try {
+  1875	      const list = Array.from(activeGenerationsMap.values());
+  1876	      await dbSaveActiveGenerations({ list });
+  1877	    } catch (e) {
+  1878	      logger.warn('[ActiveGen Persistence] Error saving file:', e);
+  1879	    }
+  1880	  }
+  1881	
+  1882	  await loadActiveGenerationsServer();
+  1883	
+  1884	  // Periodic persistence of activeGenerationsMap (every 30s)
+  1885	  setInterval(() => {
+  1886	    await saveActiveGenerationsServer();
+  1887	  }, 30000);
+  1888	
+  1889	  // In-Memory SimpleEventQueue (Max 500 items)
+  1890	  interface QueueItem {
+  1891	    id: number;
+  1892	    payload: any;
+  1893	    timestamp: number;
+  1894	  }
+  1895	  const simpleEventQueue: QueueItem[] = [];
+  1896	  let globalEventCounter = Date.now();
+  1897	
+  1898	  function pushToEventQueue(payload: any): number {
+  1899	    const eventId = ++globalEventCounter;
+  1900	    simpleEventQueue.push({ id: eventId, payload, timestamp: Date.now() });
+  1901	    if (simpleEventQueue.length > 500) {
+  1902	      simpleEventQueue.shift(); // Evict oldest
+  1903	    }
+  1904	    return eventId;
+  1905	  }
+  1906	
+  1907	  // Pending Long-Poll Requests Queue
+  1908	  interface PendingPoll {
+  1909	    token: string;
+  1910	    lastEventId: number;
+  1911	    res: any;
+  1912	    timeout: any;
+  1913	  }
+  1914	  const pendingPolls: PendingPoll[] = [];
+  1915	
+  1916	  // Heartbeat Timer every 15s for proxy connection keep-alive
+  1917	  setInterval(() => {
+  1918	    const hbPayload = `: heartbeat\nid: hb_${Date.now()}\ndata: ${JSON.stringify({ type: 'ping', ts: Date.now() })}\n\n`;
+  1919	    sseClients.forEach((client) => {
+  1920	      try {
+  1921	        client.res.write(hbPayload);
+  1922	      } catch (e) {
+  1923	        sseClients.delete(client);
+  1924	      }
+  1925	    });
+  1926	  }, 15000);
+  1927	
+  1928	  // Robust Event Broadcast Function
+  1929	  function broadcastLiveEvent(data: any) {
+  1930	    const eventId = pushToEventQueue(data);
+  1931	    const payload = `:pad\nid: ${eventId}\ndata: ${JSON.stringify(data)}\n\n`;
+  1932	
+  1933	    // 1. Broadcast to SSE clients
+  1934	    sseClients.forEach((client) => {
+  1935	      try {
+  1936	        client.res.write(payload);
+  1937	      } catch (e) {
+  1938	        // Retry 1x before dropping
+  1939	        setTimeout(() => {
+  1940	          try {
+  1941	            client.res.write(payload);
+  1942	          } catch (retryErr) {
+  1943	            logger.warn('[SSE] Client write failed after retry, dropping client.');
+  1944	            sseClients.delete(client);
+  1945	          }
+  1946	        }, 50);
+  1947	      }
+  1948	    });
+  1949	
+  1950	    // 2. Resolve Long-Polling clients waiting for new events
+  1951	    for (let i = pendingPolls.length - 1; i >= 0; i--) {
+  1952	      const poll = pendingPolls[i];
+  1953	      if (poll.lastEventId < eventId) {
+  1954	        clearTimeout(poll.timeout);
+  1955	        try {
+  1956	          poll.res.json({
+  1957	            success: true,
+  1958	            events: [data],
+  1959	            lastEventId: eventId,
+  1960	          });
+  1961	        } catch (e) {
+  1962	          // ignore write errors
+  1963	        }
+  1964	        pendingPolls.splice(i, 1);
+  1965	      }
+  1966	    }
+  1967	  }
+  1968	
+  1969	  // --- PACKAGES BACKEND PERSISTENCE ---
+  1970	  const PACKAGES_FILE_PATH = path.join(process.cwd(), 'packages.json');
+  1971	
+  1972	  const DEFAULT_PACKAGES_SERVER = [
+  1973	    {
+  1974	      id: 'mingguan',
+  1975	      name: 'Akses Mingguan',
+  1976	      tagline: 'Uji coba semua fitur AI Creator selama 7 hari penuh.',
+  1977	      price: 49000,
+  1978	      durationDays: 7,
+  1979	      features: [
+  1980	        'Akses 5 Tool AI Satset',
+  1981	        'Generator Prompt Video 8K',
+  1982	        'Generator Prompt Foto Ultra HD',
+  1983	        'Video Frame Extractor',
+  1984	        'TikTok Downloader No Watermark',
+  1985	        'Bypass Kuota & Anti Limit Level 1'
+  1986	      ],
+  1987	      isPopular: false,
+  1988	      isActive: true,
+  1989	      badgeLabel: 'Hemat',
+  1990	      targetCategory: 'public'
+  1991	    },
+  1992	    {
+  1993	      id: 'bulanan',
+  1994	      name: 'Akses Bulanan (VIP)',
+  1995	      tagline: 'Pilihan favorit kreator konten & agensi digital.',
+  1996	      price: 149000,
+  1997	      durationDays: 30,
+  1998	      features: [
+  1999	        'Semua Fitur Paket Mingguan',
+  2000	        'Prioritas Server Kecepatan Tinggi',
+  2001	        'Bypass Kuota VIP & Anti Limit Max',
+  2002	        'Format Export JSON & TXT',
+  2003	        'Masa Aktif 30 Hari Penuh',
+  2004	        'Dukungan Admin Fast Response'
+  2005	      ],
+  2006	      isPopular: true,
+  2007	      isActive: true,
+  2008	      badgeLabel: 'Paling Populer',
+  2009	      targetCategory: 'public'
+  2010	    },
+  2011	    {
+  2012	      id: 'lifetime',
+  2013	      name: 'Ultra VIP Lifetime',
+  2014	      tagline: 'Akses seumur hidup tanpa perpanjangan biaya bulanan.',
+  2015	      price: 999000,
+  2016	      durationDays: 36500,
+  2017	      features: [
+  2018	        'Akses Selamanya Tanpa Batas',
+  2019	        'Semua Fitur VIP + Update Masa Depan',
+  2020	        'Server Dedicated AI Engine',
+  2021	        'Grup Komunitas Exclusive VIP',
+  2022	        'Lisensi Komersial Konten Kreator'
+  2023	      ],
+  2024	      isPopular: false,
+  2025	      isActive: true,
+  2026	      badgeLabel: 'Sultan VIP',
+  2027	      targetCategory: 'public'
+  2028	    },
+  2029	    {
+  2030	      id: 'upgrade_vip',
+  2031	      name: 'Perpanjang / Upgrade Member VIP',
+  2032	      tagline: 'Penawaran khusus member terdaftar untuk perpanjangan atau upgrade akun.',
+  2033	      price: 99000,
+  2034	      durationDays: 30,
+  2035	      features: [
+  2036	        'Harga Khusus Perpanjangan Member',
+  2037	        'Semua Fitur VIP + Priority Server',
+  2038	        'Bypass Kuota & Anti Limit Max',
+  2039	        'Akses Bebas Pemblokiran',
+  2040	        'Dukungan Langsung via Admin VIP'
+  2041	      ],
+  2042	      isPopular: false,
+  2043	      isActive: true,
+  2044	      badgeLabel: 'Khusus Member',
+  2045	      targetCategory: 'member'
+  2046	    }
+  2047	  ];
+  2048	
+  2049	  async function await loadPackagesServer() { return await dbGetPackages(); }
+  2050	    } catch (e) {
+  2051	      logger.warn('[Packages Engine] Error reading packages file:', e);
+  2052	    }
+  2053	    await savePackagesServer(DEFAULT_PACKAGES_SERVER);
+  2054	    return DEFAULT_PACKAGES_SERVER;
+  2055	  }
+  2056	
+  2057	  async function await savePackagesServer(list: any[]) { for (const item of list) { await dbSavePackage(item); } } catch (e) {
+  2058	      logger.warn('[Packages Engine] Error saving packages file:', e);
+  2059	    }
+  2060	  }
+  2061	
+  2062	  app.get('/api/packages', (req, res) => {
+  2063	    res.json(await loadPackagesServer());
+  2064	  });
+  2065	
+  2066	  app.post('/api/admin/packages', requireAuth, requireAdminRole, async (req, res) => {
+  2067	    const updatedPackagesList = req.body;
+  2068	    if (!Array.isArray(updatedPackagesList)) {
+  2069	      return res.status(400).json({ error: 'Payload paket harus berupa array' });
+  2070	    }
+  2071	    await savePackagesServer(updatedPackagesList);
+  2072	    broadcastLiveEvent({ type: 'packages_updated', packages: updatedPackagesList });
+  2073	    res.json({ success: true, packages: updatedPackagesList });
+  2074	  });
+  2075	
+  2076	  // --- PAYMENT, CLIENTS, ACCESS CODES & QRIS ADMIN BACKEND PERSISTENCE ---
+  2077	  const ACCESS_CODES_FILE_PATH = path.join(process.cwd(), 'access_codes.json');
+  2078	  const QRIS_FILE_PATH = path.join(process.cwd(), 'qris_config.json');
+  2079	  const TRANSACTIONS_FILE_PATH = path.join(process.cwd(), 'transactions.json');
+  2080	  const CONTACT_SETTINGS_FILE_PATH = path.join(process.cwd(), 'contact_settings.json');
+  2081	
+  2082	  const DEFAULT_ACCESS_CODES_SERVER = [
+  2083	    { code: 'SATSET-ULTRA-VIP', note: 'Paket Ultra VIP Lifetime', createdAt: Date.now() },
+  2084	    { code: 'PROMPT-SATSET-888', note: 'Akses Tester VIP', createdAt: Date.now() },
+  2085	  ];
+  2086	
+  2087	  async function await loadAccessCodesServer() { return await dbGetAccessCodes(); }
+  2088	    } catch (e) {
+  2089	      logger.warn('[Access Codes] Error reading access codes file:', e);
+  2090	    }
+  2091	    return DEFAULT_ACCESS_CODES_SERVER;
+  2092	  }
+  2093	
+  2094	  async function await saveAccessCodesServer(list: any[]) { for (const item of list) { await dbSaveAccessCode(item); } } catch (e) {
+  2095	      logger.warn('[Access Codes] Error saving access codes file:', e);
+  2096	    }
+  2097	  }
+  2098	
+  2099	  app.get('/api/access-codes', (req, res) => {
+  2100	    res.json(await loadAccessCodesServer());
+  2101	  });
+  2102	
+  2103	  app.post('/api/access-codes', (req, res) => {
+  2104	    const { code, note } = req.body || {};
+  2105	    if (!code) return res.status(400).json({ error: 'Kode akses tidak boleh kosong' });
+  2106	    const list = await loadAccessCodesServer();
+  2107	    const cleanCode = code.trim().toUpperCase();
+  2108	    const existingIdx = list.findIndex((item) => item.code && item.code.toUpperCase() === cleanCode);
+  2109	    const newItem = {
+  2110	      code: cleanCode,
+  2111	      note: note || 'Akses Satset',
+  2112	      createdAt: Date.now(),
+  2113	    };
+  2114	    if (existingIdx >= 0) {
+  2115	      list[existingIdx] = { ...list[existingIdx], ...newItem };
+  2116	    } else {
+  2117	      list.unshift(newItem);
+  2118	    }
+  2119	    await saveAccessCodesServer(list);
+  2120	    broadcastLiveEvent({ type: 'access_codes_updated', accessCodes: list });
+  2121	    res.json({ success: true, accessCodes: list, item: newItem });
+  2122	  });
+  2123	
+  2124	  app.post('/api/access-codes/remove', (req, res) => {
+  2125	    const { code } = req.body || {};
+  2126	    if (!code) return res.status(400).json({ error: 'Kode akses tidak boleh kosong' });
+  2127	    const cleanCode = code.trim().toUpperCase();
+  2128	    const list = await loadAccessCodesServer().filter((item) => item.code && item.code.toUpperCase() !== cleanCode);
+  2129	    await saveAccessCodesServer(list);
+  2130	    broadcastLiveEvent({ type: 'access_codes_updated', accessCodes: list });
+  2131	    res.json({ success: true, accessCodes: list });
+  2132	  });
+  2133	
+  2134	  // --- AUDIT LOGS PERSISTENCE ENGINE ---
+  2135	  const AUDIT_LOGS_FILE_PATH = path.join(process.cwd(), 'audit_logs.json');
+  2136	
+  2137	  async function await loadAuditLogsServer() { return await dbGetAuditLogs(); }
+  2138	    } catch (e) { logger.warn('[Audit Logs] Gagal membaca audit logs', e); }
+  2139	    return [];
+  2140	  }
+  2141	
+  2142	  async function await saveAuditLogsServer(list: any[]) { for (const item of list) { await dbAddAuditLog(item); } } catch (e) { logger.warn('[Audit Logs] Gagal menyimpan audit logs', e); }
+  2143	  }
+  2144	
+  2145	  function addServerAuditLog(action: string, details: string, category: string = 'system', adminName: string = 'System') {
+  2146	    const logs = await loadAuditLogsServer();
+  2147	    const newLog = {
+  2148	      id: `audit_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+  2149	      adminName,
+  2150	      action,
+  2151	      details,
+  2152	      timestamp: new Date().toISOString(),
+  2153	      category
+  2154	    };
+  2155	    const updated = [newLog, ...logs].slice(0, 200);
+  2156	    await saveAuditLogsServer(updated);
+  2157	    broadcastLiveEvent({ type: 'audit_logs_updated', auditLogs: updated });
+  2158	  }
+  2159	
+  2160	  app.get('/api/admin/audit-logs', requireAuth, requireAdminRole, async (req, res) => {
+  2161	    res.json(await loadAuditLogsServer());
+  2162	  });
+  2163	
+  2164	  // --- DEDICATED SERVER ACCESS CODE VERIFICATION ENDPOINT ---
+  2165	  app.post('/api/verify-access-code', (req, res) => {
+  2166	    const { accessCode } = req.body || {};
+  2167	    const ip = req.ip || req.socket.remoteAddress || 'unknown';
+  2168	    const cleaned = String(accessCode || '').trim().toUpperCase();
+  2169	
+  2170	    if (!cleaned) {
+  2171	      addServerAuditLog('Percobaan Login Gagal', `Input kode akses kosong dari IP: ${ip}`, 'system', 'Security System');
+  2172	      return res.status(400).json({ success: false, error: 'Masukkan Kode Akses Anda.' });
+  2173	    }
+  2174	
+  2175	    const masterAdminKey = process.env.ADMIN_ACCESS_CODE ? process.env.ADMIN_ACCESS_CODE.trim().toUpperCase() : '';
+  2176	    const masterAdminEmail = 'GLOBALLENSN@GMAIL.COM';
+  2177	
+  2178	    if ((masterAdminKey && cleaned === masterAdminKey) || cleaned === masterAdminEmail) {
+  2179	      addServerAuditLog('Login Master Admin Berhasil', `Admin login dengan kode/email dari IP: ${ip}`, 'system', 'Administrator');
+  2180	      return res.json({
+  2181	        success: true,
+  2182	        role: 'admin',
+  2183	        name: 'Administrator',
+  2184	        email: 'globallensn@gmail.com',
+  2185	        code: masterAdminKey || masterAdminEmail,
+  2186	      });
+  2187	    }
+  2188	
+  2189	    // Check Clients list
+  2190	    const clients = await loadClientsServer();
+  2191	    const client = clients.find((c) => c.accessCode && c.accessCode.toUpperCase() === cleaned);
+  2192	
+  2193	    if (client) {
+  2194	      const now = Date.now();
+  2195	      const expiry = client.expiryDate ? new Date(client.expiryDate).getTime() : now + 86400000;
+  2196	      let calculatedStatus = client.status || 'active';
+  2197	      if (calculatedStatus !== 'suspended') {
+  2198	        if (expiry - now <= 0) calculatedStatus = 'expired';
+  2199	      }
+  2200	
+  2201	      if (calculatedStatus === 'suspended') {
+  2202	        addServerAuditLog('Login Ditolak (Ditangguhkan)', `Kode Akses ${cleaned} (${client.name}) dalam status ditangguhkan dari IP: ${ip}`, 'client', 'Security System');
+  2203	        return res.json({
+  2204	          success: false,
+  2205	          error: 'Akses Anda saat ini ditangguhkan. Silakan hubungi administrator.',
+  2206	        });
+  2207	      }
+  2208	
+  2209	      if (calculatedStatus === 'expired') {
+  2210	        addServerAuditLog('Login Ditolak (Kadaluarsa)', `Kode Akses ${cleaned} (${client.name}) telah kedaluwarsa dari IP: ${ip}`, 'client', 'Security System');
+  2211	        return res.json({
+  2212	          success: false,
+  2213	          error: 'Masa aktif kode akses telah kedaluwarsa. Silakan perpanjang paket Anda.',
+  2214	        });
+  2215	      }
+  2216	
+  2217	      // Update client's lastLoginAt
+  2218	      client.lastLoginAt = new Date().toISOString();
+  2219	      await saveClientsServer(clients);
+  2220	      broadcastLiveEvent({ type: 'clients_updated', clients });
+  2221	
+  2222	      addServerAuditLog('Login User Berhasil', `User ${client.name} (${cleaned}) berhasil login dari IP: ${ip}`, 'client', client.name);
+  2223	      return res.json({
+  2224	        success: true,
+  2225	        role: 'user',
+  2226	        code: client.accessCode,
+  2227	        name: client.name || 'Klien Satset',
+  2228	        email: client.email || '',
+  2229	      });
+  2230	    }
+  2231	
+  2232	    // Check Access Codes list
+  2233	    const accessCodes = await loadAccessCodesServer();
+  2234	    const matchedCode = accessCodes.find((item) => item.code && item.code.toUpperCase() === cleaned);
+  2235	
+  2236	    if (matchedCode) {
+  2237	      addServerAuditLog('Login AccessCode Berhasil', `Kode Akses ${cleaned} (${matchedCode.note}) berhasil login dari IP: ${ip}`, 'system', 'User');
+  2238	      return res.json({
+  2239	        success: true,
+  2240	        role: 'user',
+  2241	        code: matchedCode.code,
+  2242	        name: matchedCode.note || 'Klien Satset',
+  2243	      });
+  2244	    }
+  2245	
+  2246	    addServerAuditLog('Percobaan Login Ditolak', `Kode Akses tidak terdaftar: ${cleaned} dari IP: ${ip}`, 'system', 'Security System');
+  2247	    return res.json({
+  2248	      success: false,
+  2249	      error: 'Kode Akses tidak terdaftar atau tidak ditemukan. Silakan konsultasi via WhatsApp.',
+  2250	    });
+  2251	  });
+  2252	
+  2253	  const DEFAULT_CLIENTS_SERVER = [
+  2254	    {
+  2255	      id: 'cli_001',
+  2256	      accessCode: 'SATSET-882194',
+  2257	      name: 'Rizky Ramadhan',
+  2258	      whatsapp: '081234567890',
+  2259	      email: 'rizky@gmail.com',
+  2260	      packageId: 'bulanan',
+  2261	      packageName: 'Akses Bulanan (VIP)',
+  2262	      price: 149000,
+  2263	      startDate: '2026-08-01T10:00:00.000Z',
+  2264	      expiryDate: '2026-08-31T10:00:00.000Z',
+  2265	      status: 'active',
+  2266	      type: 'standard',
+  2267	      lastLoginAt: '2026-08-06T08:00:00.000Z',
+  2268	      toolUsage: { tiktokDownloader: 12, contentIdeas: 8, videoToPrompt: 15, photoPrompt: 6, frameExtractor: 4 },
+  2269	      createdAt: '2026-08-01T10:00:00.000Z'
+  2270	    },
+  2271	    {
+  2272	      id: 'cli_002',
+  2273	      accessCode: 'SATSET-331209',
+  2274	      name: 'Budi Santoso',
+  2275	      whatsapp: '085711223344',
+  2276	      email: 'budi.santoso@yahoo.com',
+  2277	      packageId: 'mingguan',
+  2278	      packageName: 'Akses Mingguan',
+  2279	      price: 49000,
+  2280	      startDate: '2026-08-02T12:00:00.000Z',
+  2281	      expiryDate: '2026-08-09T12:00:00.000Z',
+  2282	      status: 'expiring_soon',
+  2283	      type: 'standard',
+  2284	      lastLoginAt: '2026-08-05T14:30:00.000Z',
+  2285	      toolUsage: { tiktokDownloader: 5, contentIdeas: 3, videoToPrompt: 4, photoPrompt: 2, frameExtractor: 1 },
+  2286	      createdAt: '2026-08-02T12:00:00.000Z'
+  2287	    }
+  2288	  ];
+  2289	
+  2290	  async function await loadClientsServer() { return await dbGetClients(); }
+  2291	
+  2292	  async function await saveClientsServer(list: any[]) { for (const c of list) { await dbSaveClient(c); } }
+  2293	
+  2294	  app.get('/api/admin/clients', requireAuth, requireAdminRole, async (req, res) => {
+  2295	    res.json(await loadClientsServer());
+  2296	  });
+  2297	
+  2298	  app.post('/api/admin/clients', requireAuth, requireAdminRole, async (req, res) => {
+  2299	    const clients = Array.isArray(req.body) ? req.body : (req.body?.clients || []);
+  2300	    if (!Array.isArray(clients)) {
+  2301	      return res.status(400).json({ error: 'Payload clients harus berupa array' });
+  2302	    }
+  2303	    await saveClientsServer(clients);
+  2304	
+  2305	    // Auto-sync client access codes into access_codes.json so server verification recognizes them instantly
+  2306	    try {
+  2307	      const accessCodesList = await loadAccessCodesServer();
+  2308	      let codesChanged = false;
+  2309	      clients.forEach((c: any) => {
+  2310	        if (c && c.accessCode) {
+  2311	          const cleanCode = String(c.accessCode).trim().toUpperCase();
+  2312	          const existingIdx = accessCodesList.findIndex(item => item.code && item.code.toUpperCase() === cleanCode);
+  2313	          if (existingIdx === -1) {
+  2314	            accessCodesList.unshift({
+  2315	              code: cleanCode,
+  2316	              note: `Client ${c.name || 'Custom'} (${c.packageName || 'Satset'})`,
+  2317	              createdAt: Date.now()
+  2318	            });
+  2319	            codesChanged = true;
+  2320	          }
+  2321	        }
+  2322	      });
+  2323	      if (codesChanged) {
+  2324	        await saveAccessCodesServer(accessCodesList);
+  2325	        broadcastLiveEvent({ type: 'access_codes_updated', accessCodes: accessCodesList });
+  2326	      }
+  2327	    } catch (err) {
+  2328	      logger.warn('[Clients Server] Failed syncing client access codes:', err);
+  2329	    }
+  2330	
+  2331	    broadcastLiveEvent({ type: 'clients_updated', clients });
+  2332	    res.json({ success: true, clients });
+  2333	  });
+  2334	
+  2335	  async function await loadContactSettingsServer() { return await dbGetContactSettings(); };
+  2336	        }
+  2337	      }
+  2338	    } catch (e) {
+  2339	      logger.warn('[Contact Settings] Error reading settings file:', e);
+  2340	    }
+  2341	    return {
+  2342	      whatsappNumber: '6281234567890',
+  2343	      whatsappTemplate: 'Halo Admin Tools Satset, saya ingin konsultasi mengenai Kode Akses.',
+  2344	      updatedAt: new Date().toISOString()
+  2345	    };
+  2346	  }
+  2347	
+  2348	  async async function await saveContactSettingsServer(data: any) { await dbSaveContactSettings(data); });
+  2349	
+  2350	  app.post('/api/admin/contact-settings', requireAuth, requireAdminRole, async (req, res) => {
+  2351	    const { whatsappNumber, whatsappTemplate } = req.body;
+  2352	    const settings = {
+  2353	      whatsappNumber: whatsappNumber || '6281234567890',
+  2354	      whatsappTemplate: whatsappTemplate || 'Halo Admin Tools Satset, saya ingin konsultasi mengenai Kode Akses.',
+  2355	      updatedAt: new Date().toISOString()
+  2356	    };
+  2357	    await saveContactSettingsServer(settings);
+  2358	    broadcastLiveEvent({ type: 'contact_settings_updated', contactSettings: settings });
+  2359	    res.json({ success: true, settings });
+  2360	  });
+  2361	
+  2362	  async function await loadQrisConfigServer() { return await dbGetQrisConfig(); };
+  2363	        }
+  2364	      }
+  2365	    } catch (e) {
+  2366	      logger.warn('[QRIS Config] Error reading config file, falling back to default:', e);
+  2367	    }
+  2368	    return {
+  2369	      imageBase64: '',
+  2370	      merchantName: 'Tools Satset Official (QRIS ALL PAYMENT)',
+  2371	    };
+  2372	  }
+  2373	
+  2374	  async async function await saveQrisConfigServer(data: any) { await dbSaveQrisConfig(data); }
+  2375	    } catch (e) {
+  2376	      logger.warn('[Transactions] Error reading transactions file, falling back to default:', e);
+  2377	    }
+  2378	    return [];
+  2379	  }
+  2380	
+  2381	  async async function await saveTransactionsServer(list: any[]) { for (const item of list) { await dbSaveTransaction(item); } });
+  2382	
+  2383	  app.post('/api/admin/qris', requireAuth, requireAdminRole, async (req, res) => {
+  2384	    const { imageBase64, merchantName } = req.body;
+  2385	    const config = { imageBase64, merchantName: merchantName || 'Tools Satset Official' };
+  2386	    await saveQrisConfigServer(config);
+  2387	    broadcastLiveEvent({ type: 'qris_updated', qrisConfig: config });
+  2388	    res.json({ success: true, config });
+  2389	  });
+  2390	
+  2391	  app.get('/api/transactions', (req, res) => {
+  2392	    res.json(await loadTransactionsServer());
+  2393	  });
+  2394	
+  2395	  app.post('/api/transactions', (req, res) => {
+  2396	    const newTrx = req.body;
+  2397	    if (!newTrx || !newTrx.id) return res.status(400).json({ error: 'Payload transaksi tidak valid' });
+  2398	
+  2399	    // Validate member package requirement on server
+  2400	    const packages = await loadPackagesServer();
+  2401	    const pkg = packages.find((p) => p.id === newTrx.packageId);
+  2402	    if (pkg && pkg.targetCategory === 'member') {
+  2403	      const codeToCheck = String(newTrx.accessCode || req.headers['x-access-code'] || '').trim().toUpperCase();
+  2404	      const clients = await loadClientsServer();
+  2405	      const validMember = clients.find(
+  2406	        (c) =>
+  2407	          c.accessCode &&
+  2408	          c.accessCode.toUpperCase() === codeToCheck &&
+  2409	          (c.status === 'active' || c.status === 'expiring_soon')
+  2410	      );
+  2411	      if (!validMember && codeToCheck !== (process.env.ADMIN_ACCESS_CODE || '').trim().toUpperCase()) {
+  2412	        return res.status(403).json({
+  2413	          error: 'Paket ini khusus untuk member VIP terdaftar. Silakan login terlebih dahulu dengan Kode Akses member Anda.'
+  2414	        });
+  2415	      }
+  2416	    }
+  2417	
+  2418	    const list = await loadTransactionsServer();
+  2419	    const existingIndex = list.findIndex((t) => t.id === newTrx.id);
+  2420	    if (existingIndex >= 0) {
+  2421	      list[existingIndex] = { ...list[existingIndex], ...newTrx };
+  2422	    } else {
+  2423	      list.unshift(newTrx);
+  2424	    }
+  2425	    await saveTransactionsServer(list);
+  2426	
+  2427	    broadcastLiveEvent({
+  2428	      type: 'transaction_updated',
+  2429	      event: {
+  2430	        action: 'CREATED',
+  2431	        accessCode: newTrx.accessCode,
+  2432	        transaction: newTrx
+  2433	      },
+  2434	      transaction: newTrx
+  2435	    });
+  2436	
+  2437	    res.json({ success: true, transaction: newTrx });
+  2438	  });
+  2439	
+  2440	  app.post('/api/transactions/proof', (req, res) => {
+  2441	    const { id, proofImageBase64, transaction } = req.body;
+  2442	    const list = await loadTransactionsServer();
+  2443	    let idx = list.findIndex((t) => t.id === id);
+  2444	    if (idx === -1) {
+  2445	      if (transaction && (transaction.id || transaction.packageId)) {
+  2446	        list.unshift(transaction);
+  2447	        idx = 0;
+  2448	      } else {
+  2449	        return res.status(404).json({ error: 'Transaksi tidak ditemukan' });
+  2450	      }
+  2451	    }
+  2452	    list[idx].proofImageBase64 = proofImageBase64;
+  2453	    list[idx].paymentProofBase64 = proofImageBase64;
+  2454	    list[idx].status = 'AWAITING_VERIFICATION';
+  2455	    list[idx].updatedAt = Date.now();
+  2456	    await saveTransactionsServer(list);
+  2457	
+  2458	    broadcastLiveEvent({
+  2459	      type: 'transaction_updated',
+  2460	      event: {
+  2461	        action: 'PROOF_UPLOADED',
+  2462	        accessCode: list[idx].accessCode,
+  2463	        transaction: list[idx]
+  2464	      },
+  2465	      transaction: list[idx]
+  2466	    });
+  2467	
+  2468	    res.json({ success: true, transaction: list[idx] });
+  2469	  });
+  2470	
+  2471	  app.post('/api/transactions/approve', (req, res) => {
+  2472	    const { id, accessCode, validUntil } = req.body;
+  2473	    const list = await loadTransactionsServer();
+  2474	    const idx = list.findIndex((t) => t.id === id);
+  2475	    if (idx === -1) return res.status(404).json({ error: 'Transaksi tidak ditemukan' });
+  2476	    
+  2477	    const approvedTrx = list[idx];
+  2478	    const generatedCode = accessCode || approvedTrx.accessCode;
+  2479	
+  2480	    approvedTrx.status = 'APPROVED';
+  2481	    approvedTrx.accessCode = generatedCode;
+  2482	    approvedTrx.validUntil = validUntil;
+  2483	    approvedTrx.updatedAt = Date.now();
+  2484	    await saveTransactionsServer(list);
+  2485	
+  2486	    // 1. Persist & Broadcast access code
+  2487	    if (generatedCode) {
+  2488	      const accessCodesList = await loadAccessCodesServer();
+  2489	      const existingCodeIdx = accessCodesList.findIndex(c => c.code.toUpperCase() === generatedCode.toUpperCase());
+  2490	      if (existingCodeIdx === -1) {
+  2491	        accessCodesList.unshift({
+  2492	          code: generatedCode.toUpperCase(),
+  2493	          note: `Pembelian Paket ${approvedTrx.packageName || approvedTrx.packageId || 'Satset'} - ${approvedTrx.customerName || 'Klien'}`,
+  2494	          createdAt: Date.now()
+  2495	        });
+  2496	        await saveAccessCodesServer(accessCodesList);
+  2497	        broadcastLiveEvent({ type: 'access_codes_updated', accessCodes: accessCodesList });
+  2498	      }
+  2499	    }
+  2500	
+  2501	    // 2. Upsert & Broadcast ClientItem in clients.json
+  2502	    const clientsList = await loadClientsServer();
+  2503	    const existingClientIdx = clientsList.findIndex(c => c.accessCode && c.accessCode.toUpperCase() === (generatedCode || '').toUpperCase());
+  2504	
+  2505	    let expiryDateIso = validUntil ? new Date(validUntil).toISOString() : '';
+  2506	    if (!expiryDateIso) {
+  2507	      const now = new Date();
+  2508	      if (approvedTrx.packageId === 'mingguan') {
+  2509	        now.setDate(now.getDate() + 7);
+  2510	      } else if (approvedTrx.packageId === 'bulanan') {
+  2511	        now.setDate(now.getDate() + 30);
+  2512	      } else {
+  2513	        now.setFullYear(now.getFullYear() + 100);
+  2514	      }
+  2515	      expiryDateIso = now.toISOString();
+  2516	    }
+  2517	
+  2518	    const newOrUpdatedClient = {
+  2519	      id: existingClientIdx >= 0 ? clientsList[existingClientIdx].id : `cli_${Date.now()}`,
+  2520	      accessCode: generatedCode,
+  2521	      name: approvedTrx.customerName || 'Klien Satset',
+  2522	      whatsapp: approvedTrx.whatsapp || '',
+  2523	      email: approvedTrx.email || '',
+  2524	      packageId: approvedTrx.packageId || 'vip',
+  2525	      packageName: approvedTrx.packageName || 'Akses VIP Satset',
+  2526	      price: approvedTrx.amount || approvedTrx.price || 0,
+  2527	      startDate: new Date().toISOString(),
+  2528	      expiryDate: expiryDateIso,
+  2529	      status: 'active',
+  2530	      type: 'standard',
+  2531	      createdAt: new Date().toISOString(),
+  2532	      toolUsage: existingClientIdx >= 0 && clientsList[existingClientIdx].toolUsage ? clientsList[existingClientIdx].toolUsage : {
+  2533	        tiktokDownloader: 0,
+  2534	        contentIdeas: 0,
+  2535	        videoToPrompt: 0,
+  2536	        photoPrompt: 0,
+  2537	        frameExtractor: 0
+  2538	      }
+  2539	    };
+  2540	
+  2541	    if (existingClientIdx >= 0) {
+  2542	      clientsList[existingClientIdx] = { ...clientsList[existingClientIdx], ...newOrUpdatedClient };
+  2543	    } else {
+  2544	      clientsList.unshift(newOrUpdatedClient);
+  2545	    }
+  2546	    await saveClientsServer(clientsList);
+  2547	
+  2548	    broadcastLiveEvent({
+  2549	      type: 'clients_updated',
+  2550	      clients: clientsList
+  2551	    });
+  2552	
+  2553	    broadcastLiveEvent({
+  2554	      type: 'transaction_updated',
+  2555	      event: {
+  2556	        action: 'APPROVED',
+  2557	        accessCode: generatedCode,
+  2558	        validUntil,
+  2559	        transaction: approvedTrx
+  2560	      },
+  2561	      transaction: approvedTrx
+  2562	    });
+  2563	
+  2564	    res.json({ success: true, transaction: approvedTrx, client: newOrUpdatedClient });
+  2565	  });
+  2566	
+  2567	  app.post('/api/transactions/reject', (req, res) => {
+  2568	    const { id, rejectReason } = req.body;
+  2569	    const list = await loadTransactionsServer();
+  2570	    const idx = list.findIndex((t) => t.id === id);
+  2571	    if (idx === -1) return res.status(404).json({ error: 'Transaksi tidak ditemukan' });
+  2572	    list[idx].status = 'REJECTED';
+  2573	    list[idx].rejectReason = rejectReason || 'Ditolak oleh admin.';
+  2574	    list[idx].updatedAt = Date.now();
+  2575	    await saveTransactionsServer(list);
+  2576	
+  2577	    broadcastLiveEvent({
+  2578	      type: 'transaction_updated',
+  2579	      event: {
+  2580	        action: 'REJECTED',
+  2581	        accessCode: list[idx].accessCode,
+  2582	        rejectReason: list[idx].rejectReason,
+  2583	        transaction: list[idx]
+  2584	      },
+  2585	      transaction: list[idx]
+  2586	    });
+  2587	
+  2588	    res.json({ success: true, transaction: list[idx] });
+  2589	  });
+  2590	
+  2591	  // --- TRACKING & PIPELINE GENERATION EVENTS PERSISTENCE ENGINE ---
+  2592	  const TRACKING_FILE_PATH = path.join(process.cwd(), 'tracking.json');
+  2593	
+  2594	  // Periodic cleanup of completed active generations (> 10 mins old)
+  2595	  setInterval(() => {
+  2596	    const now = Date.now();
+  2597	    activeGenerationsMap.forEach((gen, id) => {
+  2598	      if (now - (gen.updatedAt || now) > 10 * 60 * 1000) {
+  2599	        activeGenerationsMap.delete(id);
+  2600	      }
+  2601	    });
+  2602	  }, 60000);
+  2603	
+  2604	  async function await loadEventsServer() { return await dbGetTrackingEvents(); }
+  2605	    } catch (e) {
+  2606	      logger.warn('[Tracking Engine] Error reading tracking file:', e);
+  2607	    }
+  2608	    return [];
+  2609	  }
+  2610	
+  2611	  async function await saveEventsServer(list: any[]) { for (const item of list) { await dbAddTrackingEvent(item); } } catch (e) {
+  2612	      logger.warn('[Tracking Engine] Error saving tracking file:', e);
+  2613	    }
+  2614	  }
+  2615	
+  2616	  // [REALTIME-FIX] SSE Live Stream endpoint with anti-buffering headers & rate limits
+  2617	  app.get('/api/events/stream', (req, res) => {
+  2618	    const token = (req.query.token as string) || 'GUEST-ACCESS';
+  2619	
+  2620	    // Rate Limiting: Max 3 SSE connections per token/session
+  2621	    let activeTokenConns = 0;
+  2622	    sseClients.forEach((c) => {
+  2623	      if (c.token === token) activeTokenConns++;
+  2624	    });
+  2625	
+  2626	    if (activeTokenConns >= 3) {
+  2627	      for (const client of sseClients) {
+  2628	        if (client.token === token) {
+  2629	          try {
+  2630	            client.res.end();
+  2631	          } catch (e) { logger.warn('[SSE Stream] Gagal menutup response SSE lama', e); }
+  2632	          sseClients.delete(client);
+  2633	          break;
+  2634	        }
+  2635	      }
+  2636	    }
+  2637	
+  2638	    // Explicit Anti-Buffering Headers for Proxy / Cloud Run Nginx
+  2639	    res.setHeader('Content-Type', 'text/event-stream');
+  2640	    res.setHeader('Cache-Control', 'no-cache, no-transform');
+  2641	    res.setHeader('X-Accel-Buffering', 'no');
+  2642	    res.setHeader('Connection', 'keep-alive');
+  2643	    res.flushHeaders();
+  2644	
+  2645	    // Immediate padding comment to bypass proxy initial response buffer
+  2646	    res.write(':ok\n\n');
+  2647	
+  2648	    const clientMeta: SSEClientMeta = { res, token, connectedAt: Date.now() };
+  2649	    sseClients.add(clientMeta);
+  2650	
+  2651	    // Check Last-Event-ID for missed events replay
+  2652	    const lastEventIdHeader = req.headers['last-event-id'] || (req.query.lastEventId as string);
+  2653	    const lastEventIdNum = lastEventIdHeader ? parseInt(lastEventIdHeader.toString(), 10) : 0;
+  2654	
+  2655	    if (lastEventIdNum > 0) {
+  2656	      const missed = simpleEventQueue.filter((item) => item.id > lastEventIdNum);
+  2657	      missed.forEach((item) => {
+  2658	        res.write(`:pad\nid: ${item.id}\ndata: ${JSON.stringify(item.payload)}\n\n`);
+  2659	      });
+  2660	    }
+  2661	
+  2662	    // Send initial snapshot payload
+  2663	    const initialEvents = await loadEventsServer();
+  2664	    const activeList = Array.from(activeGenerationsMap.values());
+  2665	    const initPayload = { type: 'init', events: initialEvents, activeGenerations: activeList };
+  2666	    const initEventId = pushToEventQueue(initPayload);
+  2667	    res.write(`id: ${initEventId}\ndata: ${JSON.stringify(initPayload)}\n\n`);
+  2668	
+  2669	    // Notify startup recovery state
+  2670	    res.write(`:pad\ndata: ${JSON.stringify({ type: 'server_restarted', ts: Date.now() })}\n\n`);
+  2671	
+  2672	    req.on('close', () => {
+  2673	      sseClients.delete(clientMeta);
+  2674	    });
+  2675	  });
+  2676	
+  2677	  // [REALTIME-FIX] Long-Polling endpoint as primary proxy-friendly fallback
+  2678	  app.post('/api/events/poll', (req, res) => {
+  2679	    try {
+  2680	      const lastEventId = parseInt(req.body?.lastEventId || '0', 10);
+  2681	      const token = req.body?.token || 'GUEST-ACCESS';
+  2682	
+  2683	      // Check if there are unread events in queue
+  2684	      const missed = simpleEventQueue.filter((item) => item.id > lastEventId);
+  2685	      if (missed.length > 0) {
+  2686	        const latestId = missed[missed.length - 1].id;
+  2687	        return res.json({
+  2688	          success: true,
+  2689	          events: missed.map((item) => item.payload),
+  2690	          lastEventId: latestId,
+  2691	        });
+  2692	      }
+  2693	
+  2694	      // Otherwise hold request for up to 25 seconds
+  2695	      const timeout = setTimeout(() => {
+  2696	        const idx = pendingPolls.findIndex((p) => p.res === res);
+  2697	        if (idx >= 0) pendingPolls.splice(idx, 1);
+  2698	        try {
+  2699	          res.json({ success: true, events: [], lastEventId });
+  2700	        } catch (e) { logger.warn('[SSE Polling] Gagal membalas response poll', e); }
+  2701	      }, 25000);
+  2702	
+  2703	      pendingPolls.push({ token, lastEventId, res, timeout });
+  2704	
+  2705	      req.on('close', () => {
+  2706	        clearTimeout(timeout);
+  2707	        const idx = pendingPolls.findIndex((p) => p.res === res);
+  2708	        if (idx >= 0) pendingPolls.splice(idx, 1);
+  2709	      });
+  2710	    } catch (err) {
+  2711	      res.status(500).json({ success: false, error: 'Long-polling error' });
+  2712	    }
+  2713	  });
+  2714	
+  2715	  // REST Polling / Snapshot endpoint
+  2716	  app.get('/api/events/live', (req, res) => {
+  2717	    try {
+  2718	      const events = await loadEventsServer();
+  2719	      const activeGenerations = Array.from(activeGenerationsMap.values());
+  2720	      res.json({ success: true, events, activeGenerations, activeClientCount: activeGenerations.length });
+  2721	    } catch (e) {
+  2722	      res.status(500).json({ success: false, error: 'Gagal mengambil live stream events' });
+  2723	    }
+  2724	  });
+  2725	
+  2726	  app.get('/api/events', (req, res) => {
+  2727	    try {
+  2728	      const events = await loadEventsServer();
+  2729	      res.json(events);
+  2730	    } catch (e) {
+  2731	      res.status(500).json({ success: false, error: 'Gagal mengambil data event tracking' });
+  2732	    }
+  2733	  });
+  2734	
+  2735	  // Endpoint to report active status updates (e.g., generating -> analyzing -> completed)
+  2736	  app.post('/api/events/active-status', (req, res) => {
+  2737	    try {
+  2738	      const { id, status, details } = req.body || {};
+  2739	      if (!id) return res.status(400).json({ success: false, error: 'Event ID required' });
+  2740	
+  2741	      const existing = activeGenerationsMap.get(id) || { id, startedAt: new Date().toISOString() };
+  2742	      const updated = {
+  2743	        ...existing,
+  2744	        status: status || 'generating',
+  2745	        details: details || existing.details,
+  2746	        updatedAt: Date.now(),
+  2747	      };
+  2748	
+  2749	      if (status === 'completed') {
+  2750	        // Keep briefly as completed before removal
+  2751	        setTimeout(() => activeGenerationsMap.delete(id), 120000);
+  2752	      } else {
+  2753	        activeGenerationsMap.set(id, updated);
+  2754	      }
+  2755	
+  2756	      broadcastLiveEvent({
+  2757	        type: 'active_status_update',
+  2758	        activeGeneration: updated,
+  2759	        activeGenerations: Array.from(activeGenerationsMap.values()),
+  2760	      });
+  2761	
+  2762	      res.json({ success: true, activeGeneration: updated });
+  2763	    } catch (e) {
+  2764	      res.status(500).json({ success: false, error: 'Gagal mengupdate active status' });
+  2765	    }
+  2766	  });
+  2767	
+  2768	  app.post('/api/events', (req, res) => {
+  2769	    try {
+  2770	      const eventData = req.body;
+  2771	      if (!eventData || typeof eventData !== 'object') {
+  2772	        return res.status(400).json({ success: false, error: 'Payload event tidak valid' });
+  2773	      }
+  2774	
+  2775	      const events = await loadEventsServer();
+  2776	      const newEvent = {
+  2777	        ...eventData,
+  2778	        id: eventData.id || `evt_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+  2779	        timestamp: eventData.timestamp || new Date().toISOString(),
+  2780	      };
+  2781	
+  2782	      events.unshift(newEvent); // Newest first
+  2783	      await saveEventsServer(events);
+  2784	
+  2785	      // Add to active generations map
+  2786	      activeGenerationsMap.set(newEvent.id, {
+  2787	        ...newEvent,
+  2788	        status: 'analyzing',
+  2789	        updatedAt: Date.now(),
+  2790	      });
+  2791	
+  2792	      // Broadcast live event to all connected SSE clients
+  2793	      broadcastLiveEvent({
+  2794	        type: 'generation_event',
+  2795	        event: newEvent,
+  2796	        activeGenerations: Array.from(activeGenerationsMap.values()),
+  2797	      });
+  2798	
+  2799	      // Record count in system memory as well
+  2800	      if (newEvent.outcome === 'success' || newEvent.outcome === 'flagged') {
+  2801	        recordExecutionAndUpgrade('contentIdeas');
+  2802	      }
+  2803	
+  2804	      res.json({ success: true, event: newEvent });
+  2805	    } catch (e) {
+  2806	      res.status(500).json({ success: false, error: 'Gagal menyimpan event tracking' });
+  2807	    }
+  2808	  });
+  2809	
+  2810	  // --- MULTI-AGENT ORCHESTRATOR & RELEVANCE AUDITOR ENDPOINT ---
+  2811	  app.post('/api/orchestrate', async (req, res) => {
+  2812	    try {
+  2813	      const { event, contentText } = req.body || {};
+  2814	      const { runOrchestratorPipeline } = await import('./src/agents/orchestratorAgent');
+  2815	      
+  2816	      const mockEvent = event || {
+  2817	        id: `evt_api_${Date.now()}`,
+  2818	        timestamp: new Date().toISOString(),
+  2819	        clientId: 'client_api',
+  2820	        accessCode: 'API-REQUEST',
+  2821	        packageTier: 'PRO',
+  2822	        tool: 'idea_konten',
+  2823	        category: 'umum',
+  2824	        modelUsed: 'gemini-3.6-flash',
+  2825	        tierUsed: 'Tier 2 (Server Key)',
+  2826	        isUserApiKey: false,
+  2827	        outcome: 'success',
+  2828	      };
+  2829	
+  2830	      const result = await runOrchestratorPipeline(mockEvent, contentText || '');
+  2831	
+  2832	      // Mark active generation as completed in memory
+  2833	      if (mockEvent.id && activeGenerationsMap.has(mockEvent.id)) {
+  2834	        const item = activeGenerationsMap.get(mockEvent.id);
+  2835	        item.status = 'completed';
+  2836	        item.orchestrationResult = result;
+  2837	        item.updatedAt = Date.now();
+  2838	        activeGenerationsMap.set(mockEvent.id, item);
+  2839	      }
+  2840	
+  2841	      // Broadcast orchestration audit result to connected admin dashboards
+  2842	      broadcastLiveEvent({
+  2843	        type: 'agent_orchestrated',
+  2844	        eventId: mockEvent.id,
+  2845	        result,
+  2846	        activeGenerations: Array.from(activeGenerationsMap.values()),
+  2847	      });
+  2848	
+  2849	      res.json({
+  2850	        success: true,
+  2851	        pipeline: {
+  2852	          orchestratorTier: 'Tier 2 (gemini-3.6-flash)',
+  2853	          subAgents: ['Metadata + Caption SEO', 'Overlay + Voice-over SEO', 'Query / Trend Agent'],
+  2854	          auditor: 'Relevance Auditor (Visual vs Caption vs Audio)',
+  2855	          systemMemoryUpdated: result.systemMemoryInjected,
+  2856	        },
+  2857	        result,
+  2858	      });
+  2859	    } catch (e: any) {
+  2860	      logger.warn('[Server Orchestrator] Execution notice:', e);
+  2861	      res.status(500).json({
+  2862	        success: false,
+  2863	        error: e.message || 'Gagal menjalankan Orchestrator Pipeline',
+  2864	      });
+  2865	    }
+  2866	  });
+  2867	
+  2868	  // --- 24/7 SERVER-SIDE CRON & SELF-LEARNING AGENT ENGINE ---
+  2869	  const LEARNING_QUEUE_FILE_PATH = path.join(process.cwd(), 'learning_queue.json');
+  2870	  const AI_AGENTS_FILE_PATH = path.join(process.cwd(), 'ai_agents.json');
+  2871	  const GROWTH_STATE_FILE_PATH = path.join(process.cwd(), 'growth_scaling_state.json');
+  2872	
+  2873	  async function await loadLearningQueueServer() { return await dbGetLearningQueue(); }
+  2874	    } catch (e) { logger.warn('[Learning Queue] Gagal membaca queue', e); }
+  2875	    return [];
+  2876	  }
+  2877	
+  2878	  async function await saveLearningQueueServer(list: any[]) { for (const item of list) { await dbSaveLearningQueueItem(item); } } catch (e) { logger.warn('[Learning Queue] Gagal menyimpan queue', e); }
+  2879	  }
+  2880	
+  2881	  async function await loadAiAgentsServer() { return await dbGetAiAgents(); }
+  2882	    } catch (e) { logger.warn('[AI Agents] Gagal membaca AI agents', e); }
+  2883	    return DEFAULT_AI_AGENTS;
+  2884	  }
+  2885	
+  2886	  async function await saveAiAgentsServer(list: any[]) { for (const item of list) { await dbSaveAiAgent(item); } } catch (e) { logger.warn('[AI Agents] Gagal menyimpan AI agents', e); }
+  2887	  }
+  2888	
+  2889	  async function await loadGrowthStateServer() { return await dbGetGrowthState(); }
+  2890	    } catch (e) { logger.warn('[Growth State] Gagal membaca growth state', e); }
+  2891	    return DEFAULT_GROWTH_STATE;
+  2892	  }
+  2893	
+  2894	  async function await saveGrowthStateServer(data: any) { await dbSaveGrowthState(data); } catch (e) { logger.warn('[Growth State] Gagal menyimpan growth state', e); }
+  2895	  }
+  2896	
+  2897	  // 1. Hourly Auto Trainer Cron
+  2898	  cron.schedule('0 * * * *', async () => {
+  2899	    try {
+  2900	      const keysArr = await dbGetApiKeys();
+  2901	      await optimizeCostAndTiers(keysArr);
+  2902	    } catch (e) { logger.warn('[Cron Hourly Cost] Gagal menjalankan optimizer cost', e); }
+  2903	  });
+  2904	
+  2905	  // 4. Daily User Growth Analyst Cron (00:00)
+  2906	  cron.schedule('0 0 * * *', async () => {
+  2907	    logger.info('[Server Cron 24/7] Running Daily User Growth Analyst...');
+  2908	    try {
+  2909	      const clients = await loadClientsServer();
+  2910	      const transactions = await loadTransactionsServer();
+  2911	      await analyzeUserGrowth(clients, transactions);
+  2912	    } catch (e) { logger.warn('[Cron Daily Growth] Gagal menjalankan growth analyst', e); }
+  2913	  });
+  2914	
+  2915	  // 5. Daily Meta-Agent Auto-Factory Cron (00:05)
+  2916	  cron.schedule('5 0 * * *', async () => {
+  2917	    logger.info('[Server Cron 24/7] Running Daily Meta-Agent Auto-Factory...');
+  2918	    try {
+  2919	      const clients = await loadClientsServer();
+  2920	      const transactions = await loadTransactionsServer();
+  2921	      const factoryResult = await runAutoAgentFactory(clients, transactions);
+  2922	      if (factoryResult.scalingDecisions.length > 0) {
+  2923	        broadcastLiveEvent({ type: 'growth_scaling_updated', growthState: await loadGrowthStateServer() });
+  2924	      }
+  2925	    } catch (e) { logger.warn('[Cron Daily Factory] Gagal menjalankan agent factory', e); }
+  2926	  });
+  2927	
+  2928	  // --- API ENDPOINTS FOR AEO PIPELINE & NEW AGENTS ---
+  2929	  app.post('/api/aeo/generate', async (req, res) => {
+  2930	    try {
+  2931	      const { topic, category = 'umum' } = req.body;
+  2932	      if (!topic) return res.status(400).json({ error: 'Topik konten diperlukan' });
+  2933	
+  2934	      // 1. Build AEO Pipeline Prompt
+  2935	      const aeoPrompt = buildAEOPipelinePrompt(topic, category);
+  2936	
+  2937	      // 2. Execute via Gemini AI
+  2938	      const aiClient = getGeminiClient((req.headers['x-custom-api-key'] as string) || req.body.customApiKey);
+  2939	      const response = await aiClient.models.generateContent({
+  2940	        model: 'gemini-2.5-flash',
+  2941	        contents: [
+  2942	          {
+  2943	            role: 'user',
+  2944	            parts: [{ text: aeoPrompt }],
+  2945	          },
+  2946	        ],
+  2947	      });
+  2948	
+  2949	      const responseText = response.text || '';
+  2950	      
+  2951	      // Parse JSON from code block if returned
+  2952	      let rawResult: AEOPipelineResult | undefined;
+  2953	      try {
+  2954	        const jsonMatch = responseText.match(/```json\n([\s\S]*?)\n```/) || responseText.match(/\{[\s\S]*\}/);
+  2955	        if (jsonMatch) {
+  2956	          rawResult = JSON.parse(jsonMatch[1] || jsonMatch[0]);
+  2957	        }
+  2958	      } catch (e) {
+  2959	        logger.warn('[AEO Parse Warning] Output is not valid JSON, returning formatted markdown text');
+  2960	      }
+  2961	
+  2962	      // 3. Govern and verify with AEO Governor Agent
+  2963	      const governorResult = await governAEOPipelineExecution(topic, rawResult);
+  2964	
+  2965	      res.json({
+  2966	        success: true,
+  2967	        topic,
+  2968	        category,
+  2969	        governor: governorResult,
+  2970	        rawResult,
+  2971	        responseText,
+  2972	      });
+  2973	    } catch (e: any) {
+  2974	      logger.error('[AEO Generate Error]', e);
+  2975	      res.status(500).json({ error: e.message || 'Gagal memproses AEO Pipeline' });
+  2976	    }
+  2977	  });
+  2978	
+  2979	  app.post('/api/agents/run-all', async (req, res) => {
+  2980	    try {
+  2981	      const ingestion = await monitorAndValidateIngestion('https://www.tiktok.com/@sample/video/123456');
+  2982	      const signals = await extractMultiModalSignals({ caption: 'Rekomendasi baju murah berkualitas #fashion #fyp #viral' });
+  2983	      const fusion = await calculateMultimodalFusionScore(signals);
+  2984	      const category = await classifyContentCategory('Fashion & Aksesoris wanita murah');
+  2985	      const proposal = await proposeNewCategoryTaxonomy('Konten niche baru herbal alami', 55);
+  2986	      const hookUpdate = await updateHookPatternSystemMemory('Rahasia besar yang disembunyikan toko sebelah!', 'fashion');
+  2987	      const supervisor = await superviseMetaAutoBuild(23, false);
+  2988	      const audit = await auditPaymentAndClientHardening();
+  2989	
+  2990	      res.json({
+  2991	        success: true,
+  2992	        timestamp: new Date().toISOString(),
+  2993	        agentsRun: 10,
+  2994	        results: {
+  2995	          ingestion,
+  2996	          signals,
+  2997	          fusion,
+  2998	          category,
+  2999	          proposal,
+  3000	          hookUpdate,

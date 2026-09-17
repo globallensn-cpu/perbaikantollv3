@@ -1,0 +1,78 @@
+{
+  "description": "Database Schema Blueprint for Satset AI Architecture",
+  "collections": {
+    "clients": {
+      "description": "Store client user accounts, roles, and package subscriptions",
+      "schema": {
+        "id": "string",
+        "accessCode": "string",
+        "name": "string",
+        "email": "string",
+        "role": "string (admin | user)",
+        "packageId": "string",
+        "packageName": "string",
+        "price": "number",
+        "startDate": "timestamp",
+        "expiryDate": "timestamp",
+        "status": "string (active | expired | suspended)",
+        "allowedFeatures": "array of strings",
+        "maxDailyTokens": "number",
+        "usageCount": "number",
+        "createdAt": "timestamp"
+      }
+    },
+    "packages": {
+      "description": "Subscription packages available for clients",
+      "schema": {
+        "id": "string",
+        "name": "string",
+        "tagline": "string",
+        "price": "number",
+        "durationDays": "number",
+        "features": "array of strings",
+        "isPopular": "boolean",
+        "isActive": "boolean",
+        "badgeLabel": "string",
+        "targetCategory": "string (public | member)"
+      }
+    },
+    "apiKeys": {
+      "description": "System API keys pool for admin management & auto rotation",
+      "schema": {
+        "id": "string",
+        "key": "string",
+        "alias": "string",
+        "dailyLimit": "number",
+        "dailyUsage": "number",
+        "monthlyLimit": "number",
+        "monthlyUsage": "number",
+        "status": "string (active | expired | revoked)",
+        "expiryDate": "timestamp",
+        "createdAt": "timestamp"
+      }
+    },
+    "history": {
+      "description": "User generation history for AI tools",
+      "schema": {
+        "id": "string",
+        "clientId": "string",
+        "type": "string",
+        "input": "string",
+        "output": "string",
+        "tokensUsed": "number",
+        "timestamp": "timestamp"
+      }
+    },
+    "apiKeyUsageLogs": {
+      "description": "Logs for API key usage",
+      "schema": {
+        "id": "string",
+        "keyId": "string",
+        "endpoint": "string",
+        "status": "string (success | error | rate_limited)",
+        "modelUsed": "string",
+        "timestamp": "timestamp"
+      }
+    }
+  }
+}

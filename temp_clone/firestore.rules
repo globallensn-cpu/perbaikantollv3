@@ -1,0 +1,50 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Check if user is authenticated via Firebase Auth
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Check if user has an admin role document in the clients collection or is the hardcoded super admin
+    function isAdmin() {
+      return isAuthenticated() && 
+             (request.auth.token.email == 'davidrohman037@gmail.com' || 
+              get(/databases/$(database)/documents/clients/$(request.auth.uid)).data.role == 'admin');
+    }
+
+    match /clients/{clientId} {
+      // Admins can read/write all client documents
+      // Users can read and update their own document
+      allow read, update: if isAuthenticated() && (request.auth.uid == clientId || isAdmin());
+      allow create, delete: if isAdmin();
+    }
+
+    match /packages/{packageId} {
+      // Anyone authenticated can read available packages
+      allow read: if isAuthenticated();
+      // Only admins can modify package configurations
+      allow write: if isAdmin();
+    }
+
+    match /apiKeys/{keyId} {
+      // Only admins can see and manage the system's API keys
+      allow read, write: if isAdmin();
+    }
+
+    match /history/{historyId} {
+      // Users can read and create their own history
+      allow read: if isAuthenticated() && (resource.data.clientId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && request.resource.data.clientId == request.auth.uid;
+      // Admins can manage all histories (e.g., delete)
+      allow update, delete: if isAdmin();
+    }
+
+    match /apiKeyUsageLogs/{logId} {
+      // Only admins can see API usage logs
+      allow read, write: if isAdmin();
+    }
+  }
+}
