@@ -53,7 +53,8 @@ export default function PaymentVerificationPanel() {
       }
     });
 
-    const interval = setInterval(refreshData, 3000);
+    // Polling cadangan jika SSE terputus (10 detik)
+    const interval = setInterval(refreshData, 10000);
     return () => {
       unsubscribeTrx();
       unsubscribeSSE();

@@ -259,16 +259,33 @@ async function startServer() {
   // Enable trust proxy for Google Cloud Run / Nginx reverse proxy so req.ip reflects actual client IP
   app.set('trust proxy', 1);
 
-  // Apply Global API Rate Limiter to prevent DoS and quota drain with reasonable thresholds and real-time exemptions
+  // Apply Global API Rate Limiter to prevent DoS with intelligent key identification and real-time exemptions
   const apiLimiter = rateLimit({
     windowMs: 1 * 60 * 1000, // 1 minute window
-    max: 600, // Up to 600 requests per minute per client IP
+    max: 10000, // Generous capacity per client identifier
     message: { error: 'Terlalu banyak permintaan (Rate limit). Silakan coba lagi sebentar lagi.' },
     standardHeaders: true,
     legacyHeaders: false,
+    validate: { trustProxy: false },
+    keyGenerator: (req) => {
+      const clientCode = (req.headers['x-client-access-code'] as string) || '';
+      if (clientCode && clientCode.trim()) return `client_${clientCode.trim()}`;
+
+      const fingerprint = (req.headers['x-device-fingerprint'] as string) || '';
+      if (fingerprint && fingerprint.trim()) return `fp_${fingerprint.trim()}`;
+
+      const forwarded = req.headers['x-forwarded-for'];
+      if (typeof forwarded === 'string' && forwarded.trim()) {
+        const clientIp = forwarded.split(',')[0].trim();
+        if (clientIp) return `ip_${clientIp}`;
+      }
+
+      return req.ip || req.socket.remoteAddress || 'unknown';
+    },
     skip: (req) => {
       const url = req.originalUrl || req.url || '';
-      return (
+      // Real-time events, SSE, and health endpoints
+      if (
         url.includes('/api/events') ||
         url.includes('/api/health') ||
         url.includes('/api/ping') ||
@@ -276,7 +293,55 @@ async function startServer() {
         url.includes('/events/live') ||
         url.includes('/events/stream') ||
         url.includes('/events/poll')
-      );
+      ) {
+        return true;
+      }
+
+      // Routine telemetry, presence, heartbeats, security checks
+      if (
+        url.includes('/api/presence') ||
+        url.includes('/api/security') ||
+        url.includes('/api/admin/presence') ||
+        url.includes('/api/admin/audit-logs') ||
+        url.includes('/api/analytics')
+      ) {
+        return true;
+      }
+
+      // Transactions, access codes, clients, settings, formulas, announcements, qris, gateway
+      if (
+        url.includes('/api/transactions') ||
+        url.includes('/api/access-codes') ||
+        url.includes('/api/admin/clients') ||
+        url.includes('/api/contact-settings') ||
+        url.includes('/api/user-ui-settings') ||
+        url.includes('/api/login-ui-settings') ||
+        url.includes('/api/formulas') ||
+        url.includes('/api/announcements') ||
+        url.includes('/api/affiliates') ||
+        url.includes('/api/apikeys') ||
+        url.includes('/api/qris') ||
+        url.includes('/api/llm-gateway')
+      ) {
+        return true;
+      }
+
+      // AI Generation & Processing endpoints (already secured by client license auth & LLM Gateway circuit breaker)
+      if (
+        url.includes('/api/generate-content-ideas') ||
+        url.includes('/api/generate-photo-prompt') ||
+        url.includes('/api/generate-prompt') ||
+        url.includes('/api/generate-tiktok-shop-ideas') ||
+        url.includes('/api/gemini/generate') ||
+        url.includes('/api/orchestrate') ||
+        url.includes('/api/learn-feedback') ||
+        url.includes('/api/tiktok/info') ||
+        url.includes('/api/tiktok-shop/info')
+      ) {
+        return true;
+      }
+
+      return false;
     },
   });
   app.use('/api', apiLimiter);

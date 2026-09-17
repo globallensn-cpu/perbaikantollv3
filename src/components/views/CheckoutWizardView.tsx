@@ -160,7 +160,8 @@ export default function CheckoutWizardView({
       }
     });
 
-    const interval = setInterval(checkStatus, 2000);
+    // Polling cadangan jika SSE terputus (10 detik)
+    const interval = setInterval(checkStatus, 10000);
 
     return () => {
       unsubscribeTrx();

@@ -3,73 +3,129 @@
   "configs": {
     "systemMemory": {
       "id": "systemMemory",
+      "categoryUsage": {
+        "contentIdeas": 124,
+        "photoPrompt": 44,
+        "videoPrompt": 128
+      },
+      "learnedKnowledgeBase": [
+        "[Pola Viral TikTok] Hook/Topik: \"Oli lenyap sendiri dikira diminum jin?\" 🤣\" • Tags: #TipsOtomotif #additive #PerawatanMesin #TipsPerawatanMesin #GajianSale",
+        "[Validasi Relevansi Tinggi] Pola Caption SEO Terpilih: \"&  #BatikSanarakarta #KemejaPria #BatikIndonesia #OOTDPria #RekomendasiBajuPria...\"",
+        "[Pola Viral TikTok] Hook/Topik: \"Batik Sanarakarta Kemeja Pria\" • Tags: #lenganpanjang #pria #bajubatik #bajukemeja #batikindonesia",
+        "[Pola Viral TikTok] Hook/Topik: \"Chicmore Atasan Kemeja Wanita Lengan Panjang Berkerah V Dengan Ikat Pinggang Potongan Longgar\" • Tags: #chicmore #atasankekinian #atasanwanita #ootdideas #kemejawanita",
+        "[Pola Viral TikTok] Hook/Topik: \"Teh Daun insulin\" • Tags: #tehherbal #tehdauninsulin #dauninsulin #guladarah #diabetes",
+        "[Pola Viral TikTok] Hook/Topik: \"kacamata baca lensa anti radiasi\" • Tags: #kacamatabaca #kacamataantiradiasi #antibluelight #kacamatamurah #kacamatajalan",
+        "Hook visual di 3 detik pertama meningkatkan retention rate hingga 68%.",
+        "Prompt Klip Dicopy: \"[Master Shot]: Ultra-detailed commercial TikTok Shop fashion cinematography, high-impact stop-scroll...\"",
+        "Formula Baru Teridentifikasi: Formula Pecah 10s • gemini-3.6-flash • [Aksi&Gerakan, Transkrip VO, Kamera&Lighting]",
+        "Formula Baru Teridentifikasi: Formula Pecah 5s • gemini-3.8-flash • [Aksi&Gerakan, Transkrip VO, Kamera&Lighting]",
+        "Pola Sukses (Dicopy User): \"&  #BatikSanarakarta #KemejaPria #BatikIndonesia #OOTDPria #RekomendasiBajuPria...\"",
+        "Formula Baru Teridentifikasi: Formula Pecah 10s • gemini-3.8-flash • [Aksi&Gerakan, Transkrip VO, Kamera&Lighting]",
+        "Formula Validasi AI (+Confidence 3): Formula Pecah 10s • gemini-3.8-flash • [Aksi&Gerakan, Transkrip VO, Kamera&Lighting]",
+        "Prompt Klip Dicopy: \"[Master Shot]: Ultra-detailed macro cinematography, 50mm lens shot on Arri Alexa LF. Extreme close-u...\""
+      ],
+      "lastActive": 1789406121839,
+      "totalExecutions": 408,
       "formulas": [
         {
-          "confidenceScore": 1,
+          "segmentDuration": "10",
+          "pattern": "Formula Pecah 10s • gemini-3.6-flash • [Aksi&Gerakan, Transkrip VO, Kamera&Lighting]",
           "lastUsedAt": 1788972451189,
+          "confidenceScore": 1,
           "elements": [
             "Aksi&Gerakan",
             "Transkrip VO",
             "Kamera&Lighting"
           ],
-          "model": "gemini-3.6-flash",
-          "pattern": "Formula Pecah 10s • gemini-3.6-flash • [Aksi&Gerakan, Transkrip VO, Kamera&Lighting]",
           "id": "formula_10_gemini-3.6-flash_1_1_1",
-          "segmentDuration": "10",
+          "model": "gemini-3.6-flash",
           "createdAt": 1788972451189
+        },
+        {
+          "model": "gemini-3.8-flash",
+          "createdAt": 1789589302207,
+          "confidenceScore": 2,
+          "id": "formula_5_gemini-3.8-flash_1_1_1",
+          "segmentDuration": "5",
+          "lastUsedAt": 1789589877276,
+          "pattern": "Formula Pecah 5s • gemini-3.8-flash • [Aksi&Gerakan, Transkrip VO, Kamera&Lighting]",
+          "elements": [
+            "Aksi&Gerakan",
+            "Transkrip VO",
+            "Kamera&Lighting"
+          ]
+        },
+        {
+          "confidenceScore": 3,
+          "model": "gemini-3.8-flash",
+          "createdAt": 1789654906785,
+          "pattern": "Formula Pecah 10s • gemini-3.8-flash • [Aksi&Gerakan, Transkrip VO, Kamera&Lighting]",
+          "elements": [
+            "Aksi&Gerakan",
+            "Transkrip VO",
+            "Kamera&Lighting"
+          ],
+          "segmentDuration": "10",
+          "lastUsedAt": 1789654906785,
+          "id": "formula_10_gemini-3.8-flash_1_1_1"
         }
       ],
+      "lastUpdated": "2026-09-17T16:09:32.226Z",
+      "initialized": true,
       "viralHookPatterns": [
+        "Oli lenyap sendiri dikira diminum jin?\" 🤣",
+        "Batik Sanarakarta Kemeja Pria",
+        "Chicmore Atasan Kemeja Wanita Lengan Panjang Berkerah V Dengan Ikat Pinggang Potongan Longgar",
+        "Teh Daun insulin",
         "kacamata baca lensa anti radiasi",
         "Jangan beli [produk] sebelum tau 3 hal ini!"
       ],
-      "learnedKnowledgeBase": [
-        "[Pola Viral TikTok] Hook/Topik: \"kacamata baca lensa anti radiasi\" • Tags: #kacamatabaca #kacamataantiradiasi #antibluelight #kacamatamurah #kacamatajalan",
-        "Hook visual di 3 detik pertama meningkatkan retention rate hingga 68%.",
-        "Prompt Klip Dicopy: \"[Master Shot]: Ultra-detailed commercial TikTok Shop fashion cinematography, high-impact stop-scroll...\"",
-        "Formula Baru Teridentifikasi: Formula Pecah 10s • gemini-3.6-flash • [Aksi&Gerakan, Transkrip VO, Kamera&Lighting]"
-      ],
-      "totalExecutions": 379,
-      "successfulPromptsCount": 370,
-      "categoryUsage": {
-        "photoPrompt": 42,
-        "contentIdeas": 110,
-        "videoPrompt": 122
-      },
-      "lastActive": 1789406121839,
-      "initialized": true,
-      "lastUpdated": "2026-09-16T18:11:10.538Z"
+      "successfulPromptsCount": 397
     },
     "activeGenerations": {
       "id": "activeGenerations",
       "list": [
         {
-          "tierUsed": "flagship",
-          "timestamp": "2026-09-16T18:02:38.003Z",
-          "outcome": "error",
-          "clientId": "cli_1789494684423_3wnb",
-          "latencyMs": 183,
-          "accessCode": "SATSET-VIP-N2QX4REC-F448",
-          "errorMessage": "Semua API Key dan Model Gemini sedang mengalami limit atau gangguan. Silakan coba kembali sesaat lagi.",
-          "updatedAt": 1789581755794,
-          "status": "analyzing",
-          "tool": "prompt_foto",
-          "modelUsed": "gemini-3.6-flash",
-          "packageTier": "bulanan_vip",
-          "toneOfVoice": "commercial",
-          "category": "umum",
-          "id": "evt_1789581758003_89ayc"
-        },
-        {
-          "startedAt": "2026-09-16T18:04:55.810Z",
+          "id": "pres_SATSET-VIP-N2QX4REC-F448",
           "category": "Online Workspace",
-          "details": "Aktif mengakses tool: Produk to Video (wq)",
-          "accessCode": "SATSET-VIP-N2QX4REC-F448",
+          "clientId": "SATSET-VIP-N2QX4REC-F448",
           "tool": "Produk to Video",
           "status": "active",
-          "id": "pres_SATSET-VIP-N2QX4REC-F448",
+          "details": "Aktif mengakses tool: Produk to Video (wq)",
+          "updatedAt": 1789661262271,
+          "startedAt": "2026-09-17T15:54:54.629Z",
+          "accessCode": "SATSET-VIP-N2QX4REC-F448"
+        },
+        {
+          "status": "active",
+          "updatedAt": 1789661560232,
+          "details": "Aktif mengakses tool: Prompt Foto Nano (wq)",
+          "accessCode": "SATSET-VIP-N2QX4REC-F448",
+          "category": "Online Workspace",
+          "tool": "Prompt Foto Nano",
           "clientId": "SATSET-VIP-N2QX4REC-F448",
-          "updatedAt": 1789582241536
+          "id": "pres_SATSET-VIP-N2QX4REC-F448",
+          "startedAt": "2026-09-17T16:07:59.130Z"
+        },
+        {
+          "latencyMs": 5259,
+          "tool": "idea_konten",
+          "tierUsed": "flagship",
+          "clientId": "cli_1789494684423_3wnb",
+          "toneOfVoice": "persuasive",
+          "timestamp": "2026-09-17T16:08:59.040Z",
+          "segmentSplit": 10,
+          "updatedAt": 1789661336757,
+          "durationRequested": 30,
+          "errorMessage": "Terlalu banyak permintaan (Rate limit). Silakan coba lagi sebentar lagi.",
+          "contentSalesType": "affiliate",
+          "accessCode": "SATSET-VIP-N2QX4REC-F448",
+          "modelUsed": "gemini-3.8-flash",
+          "status": "analyzing",
+          "id": "evt_1789661339040_0i2g7",
+          "category": "rumah_tangga",
+          "outcome": "error",
+          "packageTier": "bulanan_vip"
         }
       ]
     }
@@ -171,133 +227,300 @@
     },
     "evt_test_1": {
       "id": "evt_test_1",
-      "timestamp": 1789406122238,
-      "event": "test_ping"
+      "event": "test_ping",
+      "timestamp": 1789406122238
     },
     "evt_1789494892490_608bf": {
       "id": "evt_1789494892490_608bf",
-      "category": "umum",
-      "modelUsed": "gemini-3.5-flash-lite",
-      "tool": "idea_konten",
-      "durationRequested": 10,
-      "segmentSplit": 10,
-      "timestamp": "2026-09-15T17:54:52.490Z",
-      "outcome": "flagged",
-      "latencyMs": 144897,
-      "packageTier": "bulanan_vip",
-      "tierUsed": "tier2",
-      "accessCode": "SATSET-VIP-N2QX4REC-F448",
-      "clientId": "cli_1789494684423_3wnb"
-    },
-    "evt_1789496963536_hz451": {
-      "id": "evt_1789496963536_hz451",
-      "tool": "idea_konten",
       "durationRequested": 10,
       "clientId": "cli_1789494684423_3wnb",
       "packageTier": "bulanan_vip",
+      "tierUsed": "tier2",
+      "category": "umum",
+      "modelUsed": "gemini-3.5-flash-lite",
+      "segmentSplit": 10,
+      "accessCode": "SATSET-VIP-N2QX4REC-F448",
+      "outcome": "flagged",
+      "tool": "idea_konten",
+      "timestamp": "2026-09-15T17:54:52.490Z",
+      "latencyMs": 144897
+    },
+    "evt_1789496963536_hz451": {
+      "id": "evt_1789496963536_hz451",
+      "segmentSplit": 10,
+      "clientId": "cli_1789494684423_3wnb",
+      "durationRequested": 10,
+      "packageTier": "bulanan_vip",
+      "category": "umum",
+      "outcome": "flagged",
       "tierUsed": "flagship",
       "timestamp": "2026-09-15T18:29:23.536Z",
-      "outcome": "flagged",
-      "segmentSplit": 10,
+      "tool": "idea_konten",
       "latencyMs": 6370,
       "accessCode": "SATSET-VIP-N2QX4REC-F448",
-      "category": "umum",
       "modelUsed": "gemini-3.5-flash-lite"
     },
     "evt_1789497414042_94wu7": {
       "id": "evt_1789497414042_94wu7",
-      "timestamp": "2026-09-15T18:36:54.042Z",
-      "latencyMs": 6965,
+      "accessCode": "SATSET-VIP-N2QX4REC-F448",
+      "packageTier": "bulanan_vip",
+      "outcome": "flagged",
       "segmentSplit": 10,
+      "modelUsed": "gemini-3.5-flash-lite",
+      "latencyMs": 6965,
+      "timestamp": "2026-09-15T18:36:54.042Z",
+      "durationRequested": 10,
+      "tool": "idea_konten",
       "clientId": "cli_1789494684423_3wnb",
       "tierUsed": "flagship",
-      "packageTier": "bulanan_vip",
-      "tool": "idea_konten",
-      "durationRequested": 10,
-      "category": "umum",
-      "modelUsed": "gemini-3.5-flash-lite",
-      "accessCode": "SATSET-VIP-N2QX4REC-F448",
-      "outcome": "flagged"
+      "category": "umum"
     },
     "evt_1789498643158_wgsd6": {
       "id": "evt_1789498643158_wgsd6",
-      "errorMessage": "Terlalu banyak permintaan (Rate limit). Silakan coba lagi sebentar lagi.",
-      "latencyMs": 5200,
-      "category": "rumah_tangga",
-      "timestamp": "2026-09-15T18:57:23.158Z",
       "accessCode": "SATSET-VIP-N2QX4REC-F448",
-      "durationRequested": 10,
-      "modelUsed": "gemini-3.6-flash",
       "contentSalesType": "affiliate",
       "toneOfVoice": "persuasive",
-      "tool": "idea_konten",
       "packageTier": "bulanan_vip",
+      "durationRequested": 10,
       "outcome": "error",
       "segmentSplit": 6,
-      "clientId": "cli_1789494684423_3wnb",
-      "tierUsed": "flagship"
+      "category": "rumah_tangga",
+      "tool": "idea_konten",
+      "latencyMs": 5200,
+      "timestamp": "2026-09-15T18:57:23.158Z",
+      "tierUsed": "flagship",
+      "errorMessage": "Terlalu banyak permintaan (Rate limit). Silakan coba lagi sebentar lagi.",
+      "modelUsed": "gemini-3.6-flash",
+      "clientId": "cli_1789494684423_3wnb"
     },
     "evt_1789499760002_zexc3": {
       "id": "evt_1789499760002_zexc3",
-      "tool": "idea_konten",
-      "modelUsed": "gemini-3.1-flash-lite",
-      "outcome": "success",
-      "category": "rumah_tangga",
-      "contentSalesType": "affiliate",
-      "timestamp": "2026-09-15T19:16:00.002Z",
-      "clientId": "cli_1789494684423_3wnb",
-      "segmentSplit": 10,
-      "latencyMs": 89221,
       "accessCode": "SATSET-VIP-N2QX4REC-F448",
-      "tierUsed": "flagship",
+      "category": "rumah_tangga",
       "durationRequested": 20,
+      "tool": "idea_konten",
+      "tierUsed": "flagship",
+      "clientId": "cli_1789494684423_3wnb",
+      "contentSalesType": "affiliate",
+      "modelUsed": "gemini-3.1-flash-lite",
       "packageTier": "bulanan_vip",
-      "toneOfVoice": "persuasive"
+      "toneOfVoice": "persuasive",
+      "outcome": "success",
+      "segmentSplit": 10,
+      "timestamp": "2026-09-15T19:16:00.002Z",
+      "latencyMs": 89221
     },
     "evt_1789581615289_w4c2n": {
       "id": "evt_1789581615289_w4c2n",
-      "tierUsed": "flagship",
-      "timestamp": "2026-09-16T18:00:15.289Z",
-      "segmentSplit": 10,
+      "outcome": "flagged",
       "packageTier": "bulanan_vip",
       "accessCode": "SATSET-VIP-N2QX4REC-F448",
-      "clientId": "cli_1789494684423_3wnb",
       "latencyMs": 51970,
-      "durationRequested": 10,
       "category": "umum",
-      "tool": "idea_konten",
-      "outcome": "flagged",
-      "modelUsed": "gemini-3.5-flash-lite"
+      "timestamp": "2026-09-16T18:00:15.289Z",
+      "tierUsed": "flagship",
+      "modelUsed": "gemini-3.5-flash-lite",
+      "durationRequested": 10,
+      "segmentSplit": 10,
+      "clientId": "cli_1789494684423_3wnb",
+      "tool": "idea_konten"
     },
     "evt_1789581754625_n97u3": {
       "id": "evt_1789581754625_n97u3",
-      "modelUsed": "gemini-3.6-flash",
       "errorMessage": "LLM_TIMEOUT: Pemanggilan model gemini-3.7-flash melebihi batas waktu 35000ms",
       "outcome": "error",
-      "clientId": "cli_1789494684423_3wnb",
-      "tierUsed": "flagship",
-      "timestamp": "2026-09-16T18:02:34.625Z",
-      "latencyMs": 40777,
-      "category": "umum",
-      "packageTier": "bulanan_vip",
-      "tool": "prompt_foto",
+      "modelUsed": "gemini-3.6-flash",
       "toneOfVoice": "commercial",
-      "accessCode": "SATSET-VIP-N2QX4REC-F448"
+      "packageTier": "bulanan_vip",
+      "latencyMs": 40777,
+      "timestamp": "2026-09-16T18:02:34.625Z",
+      "tool": "prompt_foto",
+      "accessCode": "SATSET-VIP-N2QX4REC-F448",
+      "clientId": "cli_1789494684423_3wnb",
+      "category": "umum",
+      "tierUsed": "flagship"
     },
     "evt_1789581758003_89ayc": {
       "id": "evt_1789581758003_89ayc",
-      "tierUsed": "flagship",
+      "outcome": "error",
+      "errorMessage": "Semua API Key dan Model Gemini sedang mengalami limit atau gangguan. Silakan coba kembali sesaat lagi.",
+      "tool": "prompt_foto",
+      "accessCode": "SATSET-VIP-N2QX4REC-F448",
+      "timestamp": "2026-09-16T18:02:38.003Z",
+      "packageTier": "bulanan_vip",
       "latencyMs": 183,
       "clientId": "cli_1789494684423_3wnb",
-      "timestamp": "2026-09-16T18:02:38.003Z",
-      "modelUsed": "gemini-3.6-flash",
-      "errorMessage": "Semua API Key dan Model Gemini sedang mengalami limit atau gangguan. Silakan coba kembali sesaat lagi.",
-      "packageTier": "bulanan_vip",
-      "outcome": "error",
       "toneOfVoice": "commercial",
-      "tool": "prompt_foto",
       "category": "umum",
-      "accessCode": "SATSET-VIP-N2QX4REC-F448"
+      "modelUsed": "gemini-3.6-flash",
+      "tierUsed": "flagship"
+    },
+    "evt_1789586395528_qsl8a": {
+      "id": "evt_1789586395528_qsl8a",
+      "clientId": "cli_1789494684423_3wnb",
+      "tierUsed": "flagship",
+      "category": "umum",
+      "durationRequested": 20,
+      "latencyMs": 22609,
+      "segmentSplit": 10,
+      "timestamp": "2026-09-16T19:19:55.528Z",
+      "packageTier": "bulanan_vip",
+      "accessCode": "SATSET-VIP-N2QX4REC-F448",
+      "tool": "idea_konten",
+      "modelUsed": "gemini-3.1-flash-lite",
+      "outcome": "flagged"
+    },
+    "evt_1789586579545_za4lo": {
+      "id": "evt_1789586579545_za4lo",
+      "tool": "idea_konten",
+      "contentSalesType": "affiliate",
+      "segmentSplit": 10,
+      "modelUsed": "gemini-3.1-flash-lite",
+      "latencyMs": 24919,
+      "packageTier": "bulanan_vip",
+      "timestamp": "2026-09-16T19:22:59.545Z",
+      "toneOfVoice": "persuasive",
+      "tierUsed": "flagship",
+      "category": "rumah_tangga",
+      "accessCode": "SATSET-VIP-N2QX4REC-F448",
+      "durationRequested": 20,
+      "clientId": "cli_1789494684423_3wnb",
+      "outcome": "success"
+    },
+    "evt_1789588407305_rbl6n": {
+      "id": "evt_1789588407305_rbl6n",
+      "tool": "idea_konten",
+      "packageTier": "bulanan_vip",
+      "durationRequested": 20,
+      "category": "umum",
+      "tierUsed": "flagship",
+      "segmentSplit": 10,
+      "clientId": "cli_1789494684423_3wnb",
+      "accessCode": "SATSET-VIP-N2QX4REC-F448",
+      "outcome": "flagged",
+      "modelUsed": "gemini-3.1-flash-lite",
+      "latencyMs": 13562,
+      "timestamp": "2026-09-16T19:53:27.305Z"
+    },
+    "evt_1789654961116_jqh5i": {
+      "id": "evt_1789654961116_jqh5i",
+      "clientId": "cli_1789494684423_3wnb",
+      "latencyMs": 30990,
+      "timestamp": "2026-09-17T14:22:41.116Z",
+      "outcome": "error",
+      "modelUsed": "gemini-3.6-flash",
+      "tierUsed": "flagship",
+      "category": "umum",
+      "tool": "prompt_foto",
+      "errorMessage": "{\"error\":{\"code\":503,\"message\":\"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.\",\"status\":\"UNAVAILABLE\"}}",
+      "accessCode": "SATSET-VIP-N2QX4REC-F448",
+      "packageTier": "bulanan_vip",
+      "toneOfVoice": "commercial"
+    },
+    "evt_1789654998442_psxxq": {
+      "id": "evt_1789654998442_psxxq",
+      "packageTier": "bulanan_vip",
+      "tool": "prompt_foto",
+      "toneOfVoice": "commercial",
+      "outcome": "error",
+      "accessCode": "SATSET-VIP-N2QX4REC-F448",
+      "latencyMs": 305,
+      "timestamp": "2026-09-17T14:23:18.442Z",
+      "clientId": "cli_1789494684423_3wnb",
+      "errorMessage": "Semua API Key dan Model Gemini sedang mengalami limit atau gangguan. Silakan coba kembali sesaat lagi.",
+      "category": "rumah_tangga",
+      "tierUsed": "flagship",
+      "modelUsed": "gemini-3.6-flash"
+    },
+    "evt_1789656497811_tc60u": {
+      "id": "evt_1789656497811_tc60u",
+      "tool": "prompt_foto",
+      "accessCode": "SATSET-VIP-N2QX4REC-F448",
+      "latencyMs": 37930,
+      "category": "teknologi",
+      "timestamp": "2026-09-17T14:48:17.811Z",
+      "tierUsed": "flagship",
+      "toneOfVoice": "commercial",
+      "outcome": "success",
+      "modelUsed": "gemini-3.1-flash-lite",
+      "clientId": "cli_1789494684423_3wnb",
+      "packageTier": "bulanan_vip"
+    },
+    "evt_1789658254565_725pu": {
+      "id": "evt_1789658254565_725pu",
+      "clientId": "cli_1789494684423_3wnb",
+      "modelUsed": "gemini-3.6-flash",
+      "outcome": "success",
+      "packageTier": "bulanan_vip",
+      "latencyMs": 1166,
+      "timestamp": "2026-09-17T15:17:34.565Z",
+      "tool": "tiktok_downloader",
+      "tierUsed": "flagship",
+      "accessCode": "SATSET-VIP-N2QX4REC-F448",
+      "category": "teknologi"
+    },
+    "evt_1789659681645_yg3xg": {
+      "id": "evt_1789659681645_yg3xg",
+      "latencyMs": 9464,
+      "timestamp": "2026-09-17T15:41:21.645Z",
+      "outcome": "flagged",
+      "tool": "idea_konten",
+      "segmentSplit": 10,
+      "modelUsed": "gemini-3.1-flash-lite",
+      "accessCode": "SATSET-VIP-N2QX4REC-F448",
+      "category": "umum",
+      "tierUsed": "flagship",
+      "durationRequested": 20,
+      "clientId": "cli_1789494684423_3wnb",
+      "packageTier": "bulanan_vip"
+    },
+    "evt_1789660246403_4g6t4": {
+      "id": "evt_1789660246403_4g6t4",
+      "tool": "idea_konten",
+      "accessCode": "SATSET-VIP-N2QX4REC-F448",
+      "segmentSplit": 10,
+      "tierUsed": "flagship",
+      "contentSalesType": "affiliate",
+      "modelUsed": "gemini-3.1-flash-lite",
+      "category": "rumah_tangga",
+      "clientId": "cli_1789494684423_3wnb",
+      "durationRequested": 30,
+      "packageTier": "bulanan_vip",
+      "latencyMs": 36655,
+      "toneOfVoice": "persuasive",
+      "timestamp": "2026-09-17T15:50:46.403Z",
+      "outcome": "success"
+    },
+    "evt_1789660458131_viyca": {
+      "id": "evt_1789660458131_viyca",
+      "latencyMs": 1907,
+      "tool": "tiktok_downloader",
+      "timestamp": "2026-09-17T15:54:18.131Z",
+      "clientId": "cli_1789494684423_3wnb",
+      "accessCode": "SATSET-VIP-N2QX4REC-F448",
+      "packageTier": "bulanan_vip",
+      "tierUsed": "flagship",
+      "modelUsed": "gemini-3.6-flash",
+      "outcome": "flagged",
+      "category": "umum"
+    },
+    "evt_1789661339040_0i2g7": {
+      "id": "evt_1789661339040_0i2g7",
+      "timestamp": "2026-09-17T16:08:59.040Z",
+      "clientId": "cli_1789494684423_3wnb",
+      "accessCode": "SATSET-VIP-N2QX4REC-F448",
+      "packageTier": "bulanan_vip",
+      "tool": "idea_konten",
+      "category": "rumah_tangga",
+      "durationRequested": 30,
+      "segmentSplit": 10,
+      "toneOfVoice": "persuasive",
+      "contentSalesType": "affiliate",
+      "modelUsed": "gemini-3.8-flash",
+      "tierUsed": "flagship",
+      "latencyMs": 5259,
+      "outcome": "error",
+      "errorMessage": "Terlalu banyak permintaan (Rate limit). Silakan coba lagi sebentar lagi."
     }
   },
   "auditLogs": {
@@ -1359,282 +1582,282 @@
     },
     "audit_1789494474793_bkfe": {
       "id": "audit_1789494474793_bkfe",
-      "details": "Otentikasi Master Admin sukses dari IP: 169.254.169.126 • Browser: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)",
-      "action": "Login Berhasil",
-      "adminName": "Master Admin (globallensn@gmail.com)",
+      "timestamp": "2026-09-15T17:47:54.793Z",
       "category": "system",
-      "timestamp": "2026-09-15T17:47:54.793Z"
+      "details": "Otentikasi Master Admin sukses dari IP: 169.254.169.126 • Browser: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)",
+      "adminName": "Master Admin (globallensn@gmail.com)",
+      "action": "Login Berhasil"
     },
     "audit_1789406192041_ob51": {
       "id": "audit_1789406192041_ob51",
+      "category": "system",
       "timestamp": "2026-09-14T17:16:32.041Z",
-      "details": "Otentikasi Master Admin sukses dari IP: 169.254.169.126 • Browser: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)",
-      "adminName": "Master Admin (globallensn@gmail.com)",
       "action": "Login Berhasil",
-      "category": "system"
+      "details": "Otentikasi Master Admin sukses dari IP: 169.254.169.126 • Browser: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)",
+      "adminName": "Master Admin (globallensn@gmail.com)"
     },
     "audit_1789406193233_nudd": {
       "id": "audit_1789406193233_nudd",
-      "category": "system",
       "details": "User Administrator berhasil login (ADMIN) • Kode: globallensn@gmail.com",
       "adminName": "Administrator (globallensn@gmail.com)",
+      "category": "system",
       "timestamp": "2026-09-14T17:16:33.233Z",
       "action": "LOGIN BERHASIL"
     },
     "audit_1789406373599_usq9": {
       "id": "audit_1789406373599_usq9",
-      "timestamp": "2026-09-14T17:19:33.599Z",
-      "adminName": "Administrator (globallensn@gmail.com)",
       "action": "LOGOUT SESI",
+      "timestamp": "2026-09-14T17:19:33.599Z",
       "details": "Pengguna resmi mengakhiri sesi login (Administrator • globallensn@gmail.com)",
-      "category": "system"
+      "category": "system",
+      "adminName": "Administrator (globallensn@gmail.com)"
     },
     "audit_1789406373606_yyep": {
       "id": "audit_1789406373606_yyep",
-      "category": "system",
       "action": "Logout Sesi",
-      "adminName": "Administrator (globallensn@gmail.com)",
       "timestamp": "2026-09-14T17:19:33.606Z",
-      "details": "Pengguna resmi mengakhiri sesi login dari IP: 169.254.169.126"
+      "category": "system",
+      "details": "Pengguna resmi mengakhiri sesi login dari IP: 169.254.169.126",
+      "adminName": "Administrator (globallensn@gmail.com)"
     },
     "audit_1789406517153_r32y": {
       "id": "audit_1789406517153_r32y",
-      "timestamp": "2026-09-14T17:21:57.153Z",
-      "details": "Otentikasi Master Admin sukses dari IP: 169.254.169.126 • Browser: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)",
-      "action": "Login Berhasil",
       "adminName": "Master Admin (globallensn@gmail.com)",
-      "category": "system"
+      "category": "system",
+      "action": "Login Berhasil",
+      "timestamp": "2026-09-14T17:21:57.153Z",
+      "details": "Otentikasi Master Admin sukses dari IP: 169.254.169.126 • Browser: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)"
     },
     "audit_1789406517385_y1s7": {
       "id": "audit_1789406517385_y1s7",
-      "details": "User Administrator berhasil login (ADMIN) • Kode: globallensn@gmail.com",
-      "category": "system",
+      "timestamp": "2026-09-14T17:21:57.385Z",
       "action": "LOGIN BERHASIL",
+      "details": "User Administrator berhasil login (ADMIN) • Kode: globallensn@gmail.com",
       "adminName": "Administrator (globallensn@gmail.com)",
-      "timestamp": "2026-09-14T17:21:57.385Z"
+      "category": "system"
     },
     "audit_1789406539436_974w": {
       "id": "audit_1789406539436_974w",
-      "details": "Pengguna resmi mengakhiri sesi login (Administrator • globallensn@gmail.com)",
+      "adminName": "Administrator (globallensn@gmail.com)",
       "category": "system",
       "timestamp": "2026-09-14T17:22:19.436Z",
-      "adminName": "Administrator (globallensn@gmail.com)",
-      "action": "LOGOUT SESI"
+      "action": "LOGOUT SESI",
+      "details": "Pengguna resmi mengakhiri sesi login (Administrator • globallensn@gmail.com)"
     },
     "audit_1789406539443_hjd5": {
       "id": "audit_1789406539443_hjd5",
-      "adminName": "Administrator (globallensn@gmail.com)",
-      "timestamp": "2026-09-14T17:22:19.443Z",
       "details": "Pengguna resmi mengakhiri sesi login dari IP: 169.254.169.126",
+      "action": "Logout Sesi",
+      "adminName": "Administrator (globallensn@gmail.com)",
       "category": "system",
-      "action": "Logout Sesi"
+      "timestamp": "2026-09-14T17:22:19.443Z"
     },
     "audit_1789406542496_6zjr": {
       "id": "audit_1789406542496_6zjr",
-      "action": "Login Berhasil",
+      "details": "Login pengguna sukses • Paket: Akses Bulanan (VIP) • IP: 169.254.169.126 • Masa Aktif: 14/10/2026",
       "adminName": "a (SATSET-VIP-S2DQNNVC-F4BA)",
       "category": "client",
-      "timestamp": "2026-09-14T17:22:22.497Z",
-      "details": "Login pengguna sukses • Paket: Akses Bulanan (VIP) • IP: 169.254.169.126 • Masa Aktif: 14/10/2026"
+      "action": "Login Berhasil",
+      "timestamp": "2026-09-14T17:22:22.497Z"
     },
     "audit_1789406542625_7bn7": {
       "id": "audit_1789406542625_7bn7",
-      "category": "client",
       "details": "User a berhasil login (USER) • Kode: SATSET-VIP-S2DQNNVC-F4BA",
-      "adminName": "a (SATSET-VIP-S2DQNNVC-F4BA)",
       "timestamp": "2026-09-14T17:22:22.625Z",
-      "action": "LOGIN BERHASIL"
+      "adminName": "a (SATSET-VIP-S2DQNNVC-F4BA)",
+      "action": "LOGIN BERHASIL",
+      "category": "client"
     },
     "audit_1789483028021_3p7n": {
       "id": "audit_1789483028021_3p7n",
+      "adminName": "a (SATSET-VIP-S2DQNNVC-F4BA)",
       "details": "Pengguna resmi mengakhiri sesi login dari IP: 169.254.169.126",
       "action": "Logout Sesi",
-      "timestamp": "2026-09-15T14:37:08.021Z",
-      "adminName": "a (SATSET-VIP-S2DQNNVC-F4BA)",
-      "category": "client"
+      "category": "client",
+      "timestamp": "2026-09-15T14:37:08.021Z"
     },
     "audit_1789483028023_3zmo": {
       "id": "audit_1789483028023_3zmo",
       "timestamp": "2026-09-15T14:37:08.023Z",
-      "adminName": "a (SATSET-VIP-S2DQNNVC-F4BA)",
       "details": "Pengguna resmi mengakhiri sesi login (a • SATSET-VIP-S2DQNNVC-F4BA)",
+      "adminName": "a (SATSET-VIP-S2DQNNVC-F4BA)",
       "category": "client",
       "action": "LOGOUT SESI"
     },
     "audit_1789494474967_g850": {
       "id": "audit_1789494474967_g850",
-      "category": "system",
       "details": "User Administrator berhasil login (ADMIN) • Kode: globallensn@gmail.com",
       "adminName": "Administrator (globallensn@gmail.com)",
+      "category": "system",
       "timestamp": "2026-09-15T17:47:54.967Z",
       "action": "LOGIN BERHASIL"
     },
     "audit_1789494485037_n6d6": {
       "id": "audit_1789494485037_n6d6",
-      "details": "Pengguna resmi mengakhiri sesi login (Administrator • globallensn@gmail.com)",
-      "action": "LOGOUT SESI",
       "timestamp": "2026-09-15T17:48:05.037Z",
       "category": "system",
+      "action": "LOGOUT SESI",
+      "details": "Pengguna resmi mengakhiri sesi login (Administrator • globallensn@gmail.com)",
       "adminName": "Administrator (globallensn@gmail.com)"
     },
     "audit_1789494485054_ll8o": {
       "id": "audit_1789494485054_ll8o",
+      "timestamp": "2026-09-15T17:48:05.054Z",
       "category": "system",
       "action": "Logout Sesi",
-      "adminName": "Administrator (globallensn@gmail.com)",
-      "timestamp": "2026-09-15T17:48:05.054Z",
-      "details": "Pengguna resmi mengakhiri sesi login dari IP: 169.254.169.126"
+      "details": "Pengguna resmi mengakhiri sesi login dari IP: 169.254.169.126",
+      "adminName": "Administrator (globallensn@gmail.com)"
     },
     "audit_1789494488558_rday": {
       "id": "audit_1789494488558_rday",
-      "action": "Login Berhasil",
-      "category": "client",
-      "adminName": "a (SATSET-VIP-S2DQNNVC-F4BA)",
       "details": "Login pengguna sukses • Paket: Akses Bulanan (VIP) • IP: 169.254.169.126 • Masa Aktif: 14/10/2026",
-      "timestamp": "2026-09-15T17:48:08.559Z"
+      "action": "Login Berhasil",
+      "timestamp": "2026-09-15T17:48:08.559Z",
+      "adminName": "a (SATSET-VIP-S2DQNNVC-F4BA)",
+      "category": "client"
     },
     "audit_1789494488743_875t": {
       "id": "audit_1789494488743_875t",
-      "action": "LOGIN BERHASIL",
-      "timestamp": "2026-09-15T17:48:08.744Z",
       "category": "client",
+      "timestamp": "2026-09-15T17:48:08.744Z",
+      "action": "LOGIN BERHASIL",
       "details": "User a berhasil login (USER) • Kode: SATSET-VIP-S2DQNNVC-F4BA",
       "adminName": "a (SATSET-VIP-S2DQNNVC-F4BA)"
     },
     "audit_1789494540479_mk70": {
       "id": "audit_1789494540479_mk70",
+      "adminName": "a (SATSET-VIP-S2DQNNVC-F4BA)",
+      "category": "client",
       "action": "LOGOUT SESI",
       "details": "Pengguna resmi mengakhiri sesi login (a • SATSET-VIP-S2DQNNVC-F4BA)",
-      "timestamp": "2026-09-15T17:49:00.479Z",
-      "category": "client",
-      "adminName": "a (SATSET-VIP-S2DQNNVC-F4BA)"
+      "timestamp": "2026-09-15T17:49:00.479Z"
     },
     "audit_1789494540481_ln1l": {
       "id": "audit_1789494540481_ln1l",
-      "adminName": "a (SATSET-VIP-S2DQNNVC-F4BA)",
-      "action": "Logout Sesi",
       "category": "client",
+      "adminName": "a (SATSET-VIP-S2DQNNVC-F4BA)",
       "timestamp": "2026-09-15T17:49:00.481Z",
+      "action": "Logout Sesi",
       "details": "Pengguna resmi mengakhiri sesi login dari IP: 169.254.169.126"
     },
     "audit_1789494543919_1i37": {
       "id": "audit_1789494543919_1i37",
-      "timestamp": "2026-09-15T17:49:03.919Z",
-      "action": "Login Berhasil",
       "adminName": "Master Admin (globallensn@gmail.com)",
       "details": "Otentikasi Master Admin sukses dari IP: 169.254.169.126 • Browser: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)",
+      "action": "Login Berhasil",
+      "timestamp": "2026-09-15T17:49:03.919Z",
       "category": "system"
     },
     "audit_1789494544058_px3j": {
       "id": "audit_1789494544058_px3j",
-      "adminName": "Administrator (globallensn@gmail.com)",
-      "category": "system",
+      "action": "LOGIN BERHASIL",
       "timestamp": "2026-09-15T17:49:04.058Z",
+      "category": "system",
       "details": "User Administrator berhasil login (ADMIN) • Kode: globallensn@gmail.com",
-      "action": "LOGIN BERHASIL"
+      "adminName": "Administrator (globallensn@gmail.com)"
     },
     "audit_1789494608613_ia05": {
       "id": "audit_1789494608613_ia05",
-      "action": "LOGOUT SESI",
       "timestamp": "2026-09-15T17:50:08.613Z",
-      "adminName": "Administrator (globallensn@gmail.com)",
+      "details": "Pengguna resmi mengakhiri sesi login (Administrator • globallensn@gmail.com)",
       "category": "system",
-      "details": "Pengguna resmi mengakhiri sesi login (Administrator • globallensn@gmail.com)"
+      "adminName": "Administrator (globallensn@gmail.com)",
+      "action": "LOGOUT SESI"
     },
     "audit_1789494608615_o7pc": {
       "id": "audit_1789494608615_o7pc",
+      "adminName": "Administrator (globallensn@gmail.com)",
       "action": "Logout Sesi",
-      "details": "Pengguna resmi mengakhiri sesi login dari IP: 169.254.169.126",
-      "timestamp": "2026-09-15T17:50:08.615Z",
       "category": "system",
-      "adminName": "Administrator (globallensn@gmail.com)"
+      "details": "Pengguna resmi mengakhiri sesi login dari IP: 169.254.169.126",
+      "timestamp": "2026-09-15T17:50:08.615Z"
     },
     "audit_1789494634391_5m9l": {
       "id": "audit_1789494634391_5m9l",
-      "details": "Otentikasi Master Admin sukses dari IP: 169.254.169.126 • Browser: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)",
       "action": "Login Berhasil",
+      "details": "Otentikasi Master Admin sukses dari IP: 169.254.169.126 • Browser: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)",
       "adminName": "Master Admin (globallensn@gmail.com)",
       "timestamp": "2026-09-15T17:50:34.391Z",
       "category": "system"
     },
     "audit_1789494634578_pa2e": {
       "id": "audit_1789494634578_pa2e",
+      "category": "system",
       "action": "LOGIN BERHASIL",
-      "timestamp": "2026-09-15T17:50:34.578Z",
       "adminName": "Administrator (globallensn@gmail.com)",
-      "details": "User Administrator berhasil login (ADMIN) • Kode: globallensn@gmail.com",
-      "category": "system"
+      "timestamp": "2026-09-15T17:50:34.578Z",
+      "details": "User Administrator berhasil login (ADMIN) • Kode: globallensn@gmail.com"
     },
     "audit_1789494655009_xm12": {
       "id": "audit_1789494655009_xm12",
-      "adminName": "Administrator (globallensn@gmail.com)",
+      "action": "LOGOUT SESI",
       "category": "system",
       "timestamp": "2026-09-15T17:50:55.009Z",
-      "action": "LOGOUT SESI",
-      "details": "Pengguna resmi mengakhiri sesi login (Administrator • globallensn@gmail.com)"
+      "details": "Pengguna resmi mengakhiri sesi login (Administrator • globallensn@gmail.com)",
+      "adminName": "Administrator (globallensn@gmail.com)"
     },
     "audit_1789494655012_s240": {
       "id": "audit_1789494655012_s240",
-      "action": "Logout Sesi",
       "category": "system",
-      "details": "Pengguna resmi mengakhiri sesi login dari IP: 169.254.169.126",
       "adminName": "Administrator (globallensn@gmail.com)",
-      "timestamp": "2026-09-15T17:50:55.012Z"
+      "action": "Logout Sesi",
+      "timestamp": "2026-09-15T17:50:55.012Z",
+      "details": "Pengguna resmi mengakhiri sesi login dari IP: 169.254.169.126"
     },
     "audit_1789494658911_hdvm": {
       "id": "audit_1789494658911_hdvm",
-      "adminName": "Tamu Tidak Terdaftar (SATSET-VIP-N2QX4REC-F448)",
       "action": "Login Gagal (Kode Salah)",
+      "details": "Percobaan kode tidak terdaftar (Percobaan ke-1 dari batas 5) • IP: 169.254.169.126",
+      "adminName": "Tamu Tidak Terdaftar (SATSET-VIP-N2QX4REC-F448)",
       "category": "system",
-      "timestamp": "2026-09-15T17:50:58.911Z",
-      "details": "Percobaan kode tidak terdaftar (Percobaan ke-1 dari batas 5) • IP: 169.254.169.126"
+      "timestamp": "2026-09-15T17:50:58.911Z"
     },
     "audit_1789494659034_3uwz": {
       "id": "audit_1789494659034_3uwz",
-      "details": "Percobaan login gagal dengan kode: SATSET-VIP-N2QX4REC-F448 (Kode Akses tidak terdaftar atau salah. (1/5 batas percobaan sebelum Device Banned))",
-      "category": "system",
+      "adminName": "Tamu (SATSET-VIP-N2QX4REC-F448)",
       "timestamp": "2026-09-15T17:50:59.034Z",
-      "action": "LOGIN GAGAL",
-      "adminName": "Tamu (SATSET-VIP-N2QX4REC-F448)"
+      "category": "system",
+      "details": "Percobaan login gagal dengan kode: SATSET-VIP-N2QX4REC-F448 (Kode Akses tidak terdaftar atau salah. (1/5 batas percobaan sebelum Device Banned))",
+      "action": "LOGIN GAGAL"
     },
     "audit_1789494668895_vqg5": {
       "id": "audit_1789494668895_vqg5",
       "action": "Login Berhasil",
       "timestamp": "2026-09-15T17:51:08.895Z",
-      "adminName": "Master Admin (globallensn@gmail.com)",
+      "category": "system",
       "details": "Otentikasi Master Admin sukses dari IP: 169.254.169.126 • Browser: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)",
-      "category": "system"
+      "adminName": "Master Admin (globallensn@gmail.com)"
     },
     "audit_1789494669001_qcdf": {
       "id": "audit_1789494669001_qcdf",
       "category": "system",
-      "details": "User Administrator berhasil login (ADMIN) • Kode: globallensn@gmail.com",
       "adminName": "Administrator (globallensn@gmail.com)",
+      "action": "LOGIN BERHASIL",
       "timestamp": "2026-09-15T17:51:09.001Z",
-      "action": "LOGIN BERHASIL"
+      "details": "User Administrator berhasil login (ADMIN) • Kode: globallensn@gmail.com"
     },
     "audit_1789494684538_mvfm": {
       "id": "audit_1789494684538_mvfm",
+      "category": "system",
       "action": "LOGOUT SESI",
       "adminName": "Administrator (globallensn@gmail.com)",
-      "category": "system",
       "timestamp": "2026-09-15T17:51:24.538Z",
       "details": "Pengguna resmi mengakhiri sesi login (Administrator • globallensn@gmail.com)"
     },
     "audit_1789494684539_w4kq": {
       "id": "audit_1789494684539_w4kq",
-      "timestamp": "2026-09-15T17:51:24.539Z",
       "adminName": "Administrator (globallensn@gmail.com)",
-      "details": "Pengguna resmi mengakhiri sesi login dari IP: 169.254.169.126",
       "action": "Logout Sesi",
-      "category": "system"
+      "details": "Pengguna resmi mengakhiri sesi login dari IP: 169.254.169.126",
+      "category": "system",
+      "timestamp": "2026-09-15T17:51:24.539Z"
     },
     "audit_1789494687876_riaq": {
       "id": "audit_1789494687876_riaq",
-      "action": "Login Berhasil",
-      "category": "client",
       "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
       "details": "Login pengguna sukses • Paket: Akses Bulanan (VIP) • IP: 169.254.169.126 • Masa Aktif: 15/10/2026",
+      "action": "Login Berhasil",
+      "category": "client",
       "timestamp": "2026-09-15T17:51:27.876Z"
     },
     "audit_1789494687998_63re": {
@@ -1642,344 +1865,984 @@
       "category": "client",
       "action": "LOGIN BERHASIL",
       "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
-      "details": "User wq berhasil login (USER) • Kode: SATSET-VIP-N2QX4REC-F448",
-      "timestamp": "2026-09-15T17:51:27.998Z"
+      "timestamp": "2026-09-15T17:51:27.998Z",
+      "details": "User wq berhasil login (USER) • Kode: SATSET-VIP-N2QX4REC-F448"
     },
     "audit_1789495218283_zbu4": {
       "id": "audit_1789495218283_zbu4",
-      "action": "Logout Sesi",
       "timestamp": "2026-09-15T18:00:18.283Z",
-      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "action": "Logout Sesi",
       "details": "Pengguna resmi mengakhiri sesi login dari IP: 169.254.169.126",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
       "category": "client"
     },
     "audit_1789495218285_1mo6": {
       "id": "audit_1789495218285_1mo6",
       "timestamp": "2026-09-15T18:00:18.285Z",
+      "category": "client",
       "details": "Pengguna resmi mengakhiri sesi login (wq • SATSET-VIP-N2QX4REC-F448)",
       "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
-      "category": "client",
       "action": "LOGOUT SESI"
     },
     "audit_1789495329916_9unf": {
       "id": "audit_1789495329916_9unf",
-      "category": "client",
-      "action": "Login Berhasil",
-      "details": "Login pengguna sukses • Paket: Akses Bulanan (VIP) • IP: 169.254.169.126 • Masa Aktif: 15/10/2026",
       "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
-      "timestamp": "2026-09-15T18:02:09.916Z"
+      "action": "Login Berhasil",
+      "category": "client",
+      "timestamp": "2026-09-15T18:02:09.916Z",
+      "details": "Login pengguna sukses • Paket: Akses Bulanan (VIP) • IP: 169.254.169.126 • Masa Aktif: 15/10/2026"
     },
     "audit_1789495330060_deox": {
       "id": "audit_1789495330060_deox",
-      "category": "client",
       "details": "User wq berhasil login (USER) • Kode: SATSET-VIP-N2QX4REC-F448",
+      "category": "client",
       "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
       "timestamp": "2026-09-15T18:02:10.060Z",
       "action": "LOGIN BERHASIL"
     },
     "audit_1789495418503_hmvo": {
       "id": "audit_1789495418503_hmvo",
+      "timestamp": "2026-09-15T18:03:38.503Z",
       "category": "client",
-      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
       "details": "Pengguna resmi mengakhiri sesi login (wq • SATSET-VIP-N2QX4REC-F448)",
-      "action": "LOGOUT SESI",
-      "timestamp": "2026-09-15T18:03:38.503Z"
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "action": "LOGOUT SESI"
     },
     "audit_1789495418505_xzn4": {
       "id": "audit_1789495418505_xzn4",
-      "action": "Logout Sesi",
+      "timestamp": "2026-09-15T18:03:38.505Z",
       "category": "client",
       "details": "Pengguna resmi mengakhiri sesi login dari IP: 169.254.169.126",
-      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
-      "timestamp": "2026-09-15T18:03:38.505Z"
+      "action": "Logout Sesi",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)"
     },
     "audit_1789495625432_lp98": {
       "id": "audit_1789495625432_lp98",
       "details": "Login pengguna sukses • Paket: Akses Bulanan (VIP) • IP: 169.254.169.126 • Masa Aktif: 15/10/2026",
-      "category": "client",
       "action": "Login Berhasil",
       "timestamp": "2026-09-15T18:07:05.432Z",
+      "category": "client",
       "adminName": "wq (SATSET-VIP-N2QX4REC-F448)"
     },
     "audit_1789495625558_sot9": {
       "id": "audit_1789495625558_sot9",
-      "action": "LOGIN BERHASIL",
-      "details": "User wq berhasil login (USER) • Kode: SATSET-VIP-N2QX4REC-F448",
       "timestamp": "2026-09-15T18:07:05.558Z",
       "category": "client",
-      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)"
+      "action": "LOGIN BERHASIL",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "details": "User wq berhasil login (USER) • Kode: SATSET-VIP-N2QX4REC-F448"
     },
     "audit_1789496141382_bfvk": {
       "id": "audit_1789496141382_bfvk",
-      "timestamp": "2026-09-15T18:15:41.383Z",
       "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "action": "Login Berhasil",
+      "timestamp": "2026-09-15T18:15:41.383Z",
       "details": "Login pengguna sukses • Paket: Akses Bulanan (VIP) • IP: 169.254.169.126 • Masa Aktif: 15/10/2026",
-      "category": "client",
-      "action": "Login Berhasil"
+      "category": "client"
     },
     "audit_1789496141499_6a1w": {
       "id": "audit_1789496141499_6a1w",
-      "category": "client",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
       "details": "User wq berhasil login (USER) • Kode: SATSET-VIP-N2QX4REC-F448",
-      "timestamp": "2026-09-15T18:15:41.499Z",
       "action": "LOGIN BERHASIL",
-      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)"
+      "category": "client",
+      "timestamp": "2026-09-15T18:15:41.499Z"
     },
     "audit_1789496312862_mzlb": {
       "id": "audit_1789496312862_mzlb",
-      "category": "client",
-      "details": "Pengguna resmi mengakhiri sesi login dari IP: 169.254.169.126",
       "action": "Logout Sesi",
       "timestamp": "2026-09-15T18:18:32.862Z",
-      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)"
-    },
-    "audit_1789496312864_qvyf": {
-      "id": "audit_1789496312864_qvyf",
-      "category": "client",
-      "action": "LOGOUT SESI",
-      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
-      "timestamp": "2026-09-15T18:18:32.864Z",
-      "details": "Pengguna resmi mengakhiri sesi login (wq • SATSET-VIP-N2QX4REC-F448)"
-    },
-    "audit_1789496780469_wmi1": {
-      "id": "audit_1789496780469_wmi1",
-      "action": "Login Berhasil",
-      "category": "client",
-      "details": "Login pengguna sukses • Paket: Akses Bulanan (VIP) • IP: 169.254.169.126 • Masa Aktif: 15/10/2026",
-      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
-      "timestamp": "2026-09-15T18:26:20.470Z"
-    },
-    "audit_1789496780620_fkkm": {
-      "id": "audit_1789496780620_fkkm",
-      "category": "client",
-      "details": "User wq berhasil login (USER) • Kode: SATSET-VIP-N2QX4REC-F448",
-      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
-      "timestamp": "2026-09-15T18:26:20.620Z",
-      "action": "LOGIN BERHASIL"
-    },
-    "audit_1789497106264_ynuj": {
-      "id": "audit_1789497106264_ynuj",
-      "timestamp": "2026-09-15T18:31:46.264Z",
-      "action": "Logout Sesi",
       "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
       "details": "Pengguna resmi mengakhiri sesi login dari IP: 169.254.169.126",
       "category": "client"
     },
+    "audit_1789496312864_qvyf": {
+      "id": "audit_1789496312864_qvyf",
+      "details": "Pengguna resmi mengakhiri sesi login (wq • SATSET-VIP-N2QX4REC-F448)",
+      "action": "LOGOUT SESI",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "category": "client",
+      "timestamp": "2026-09-15T18:18:32.864Z"
+    },
+    "audit_1789496780469_wmi1": {
+      "id": "audit_1789496780469_wmi1",
+      "action": "Login Berhasil",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "details": "Login pengguna sukses • Paket: Akses Bulanan (VIP) • IP: 169.254.169.126 • Masa Aktif: 15/10/2026",
+      "category": "client",
+      "timestamp": "2026-09-15T18:26:20.470Z"
+    },
+    "audit_1789496780620_fkkm": {
+      "id": "audit_1789496780620_fkkm",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "details": "User wq berhasil login (USER) • Kode: SATSET-VIP-N2QX4REC-F448",
+      "category": "client",
+      "action": "LOGIN BERHASIL",
+      "timestamp": "2026-09-15T18:26:20.620Z"
+    },
+    "audit_1789497106264_ynuj": {
+      "id": "audit_1789497106264_ynuj",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "details": "Pengguna resmi mengakhiri sesi login dari IP: 169.254.169.126",
+      "category": "client",
+      "timestamp": "2026-09-15T18:31:46.264Z",
+      "action": "Logout Sesi"
+    },
     "audit_1789497106265_01zc": {
       "id": "audit_1789497106265_01zc",
+      "timestamp": "2026-09-15T18:31:46.265Z",
       "details": "Pengguna resmi mengakhiri sesi login (wq • SATSET-VIP-N2QX4REC-F448)",
       "category": "client",
-      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
-      "timestamp": "2026-09-15T18:31:46.265Z",
-      "action": "LOGOUT SESI"
+      "action": "LOGOUT SESI",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)"
     },
     "audit_1789497395339_99ml": {
       "id": "audit_1789497395339_99ml",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
       "action": "Login Berhasil",
-      "details": "Login pengguna sukses • Paket: Akses Bulanan (VIP) • IP: 169.254.169.126 • Masa Aktif: 15/10/2026",
-      "timestamp": "2026-09-15T18:36:35.339Z",
       "category": "client",
-      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)"
+      "details": "Login pengguna sukses • Paket: Akses Bulanan (VIP) • IP: 169.254.169.126 • Masa Aktif: 15/10/2026",
+      "timestamp": "2026-09-15T18:36:35.339Z"
     },
     "audit_1789497395469_o4ut": {
       "id": "audit_1789497395469_o4ut",
       "category": "client",
-      "details": "User wq berhasil login (USER) • Kode: SATSET-VIP-N2QX4REC-F448",
-      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
       "timestamp": "2026-09-15T18:36:35.469Z",
-      "action": "LOGIN BERHASIL"
+      "action": "LOGIN BERHASIL",
+      "details": "User wq berhasil login (USER) • Kode: SATSET-VIP-N2QX4REC-F448",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)"
     },
     "audit_1789498770929_t41w": {
       "id": "audit_1789498770929_t41w",
+      "action": "Logout Sesi",
       "timestamp": "2026-09-15T18:59:30.929Z",
       "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
-      "action": "Logout Sesi",
       "details": "Pengguna resmi mengakhiri sesi login dari IP: 169.254.169.126",
       "category": "client"
     },
     "audit_1789498770932_sqfm": {
       "id": "audit_1789498770932_sqfm",
-      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
       "category": "client",
-      "timestamp": "2026-09-15T18:59:30.932Z",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
       "action": "LOGOUT SESI",
+      "timestamp": "2026-09-15T18:59:30.932Z",
       "details": "Pengguna resmi mengakhiri sesi login (wq • SATSET-VIP-N2QX4REC-F448)"
     },
     "audit_1789581398081_bn7f": {
       "id": "audit_1789581398081_bn7f",
       "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
-      "timestamp": "2026-09-16T17:56:38.081Z",
-      "category": "client",
       "details": "Pengguna resmi mengakhiri sesi login dari IP: 169.254.169.126",
-      "action": "Logout Sesi"
+      "category": "client",
+      "action": "Logout Sesi",
+      "timestamp": "2026-09-16T17:56:38.081Z"
     },
     "audit_1789581398087_rx46": {
       "id": "audit_1789581398087_rx46",
-      "details": "Pengguna resmi mengakhiri sesi login (wq • SATSET-VIP-N2QX4REC-F448)",
-      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
       "timestamp": "2026-09-16T17:56:38.087Z",
       "category": "client",
-      "action": "LOGOUT SESI"
+      "action": "LOGOUT SESI",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "details": "Pengguna resmi mengakhiri sesi login (wq • SATSET-VIP-N2QX4REC-F448)"
     },
     "audit_1789499338232_ibgf": {
       "id": "audit_1789499338232_ibgf",
-      "category": "client",
-      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
       "details": "Login pengguna sukses • Paket: Akses Bulanan (VIP) • IP: 169.254.169.126 • Masa Aktif: 15/10/2026",
       "timestamp": "2026-09-15T19:08:58.233Z",
-      "action": "Login Berhasil"
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "action": "Login Berhasil",
+      "category": "client"
     },
     "audit_1789499338413_mv3m": {
       "id": "audit_1789499338413_mv3m",
-      "action": "LOGIN BERHASIL",
+      "category": "client",
       "details": "User wq berhasil login (USER) • Kode: SATSET-VIP-N2QX4REC-F448",
       "timestamp": "2026-09-15T19:08:58.413Z",
-      "category": "client",
+      "action": "LOGIN BERHASIL",
       "adminName": "wq (SATSET-VIP-N2QX4REC-F448)"
     },
     "audit_1789499599617_vy08": {
       "id": "audit_1789499599617_vy08",
-      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
-      "category": "client",
-      "timestamp": "2026-09-15T19:13:19.618Z",
       "details": "Login pengguna sukses • Paket: Akses Bulanan (VIP) • IP: 165.99.194.243 • Masa Aktif: 15/10/2026",
-      "action": "Login Berhasil"
+      "timestamp": "2026-09-15T19:13:19.618Z",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "action": "Login Berhasil",
+      "category": "client"
     },
     "audit_1789499599799_mj79": {
       "id": "audit_1789499599799_mj79",
       "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
-      "category": "client",
       "action": "LOGIN BERHASIL",
       "timestamp": "2026-09-15T19:13:19.799Z",
+      "category": "client",
       "details": "User wq berhasil login (USER) • Kode: SATSET-VIP-N2QX4REC-F448"
     },
     "audit_1789499623127_33wy": {
       "id": "audit_1789499623127_33wy",
+      "action": "Logout Sesi",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
       "details": "Pengguna resmi mengakhiri sesi login dari IP: 165.99.194.243",
       "category": "client",
-      "timestamp": "2026-09-15T19:13:43.127Z",
-      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
-      "action": "Logout Sesi"
+      "timestamp": "2026-09-15T19:13:43.127Z"
     },
     "audit_1789499623129_9rs1": {
       "id": "audit_1789499623129_9rs1",
       "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
-      "action": "LOGOUT SESI",
       "category": "client",
+      "action": "LOGOUT SESI",
       "timestamp": "2026-09-15T19:13:43.129Z",
       "details": "Pengguna resmi mengakhiri sesi login (wq • SATSET-VIP-N2QX4REC-F448)"
     },
     "audit_1789499626552_ghzs": {
       "id": "audit_1789499626552_ghzs",
       "details": "Otentikasi Master Admin sukses dari IP: 165.99.194.243 • Browser: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)",
+      "timestamp": "2026-09-15T19:13:46.552Z",
       "category": "system",
       "adminName": "Master Admin (globallensn@gmail.com)",
-      "timestamp": "2026-09-15T19:13:46.552Z",
       "action": "Login Berhasil"
     },
     "audit_1789499626657_d9sa": {
       "id": "audit_1789499626657_d9sa",
-      "timestamp": "2026-09-15T19:13:46.657Z",
-      "category": "system",
       "details": "User Administrator berhasil login (ADMIN) • Kode: globallensn@gmail.com",
       "adminName": "Administrator (globallensn@gmail.com)",
-      "action": "LOGIN BERHASIL"
+      "action": "LOGIN BERHASIL",
+      "category": "system",
+      "timestamp": "2026-09-15T19:13:46.657Z"
     },
     "audit_1789499640777_2shv": {
       "id": "audit_1789499640777_2shv",
-      "timestamp": "2026-09-15T19:14:00.777Z",
+      "category": "system",
       "action": "Logout Sesi",
       "adminName": "Administrator (globallensn@gmail.com)",
-      "details": "Pengguna resmi mengakhiri sesi login dari IP: 165.99.194.243",
-      "category": "system"
+      "timestamp": "2026-09-15T19:14:00.777Z",
+      "details": "Pengguna resmi mengakhiri sesi login dari IP: 165.99.194.243"
     },
     "audit_1789499640779_qdfn": {
       "id": "audit_1789499640779_qdfn",
       "adminName": "Administrator (globallensn@gmail.com)",
-      "timestamp": "2026-09-15T19:14:00.779Z",
       "details": "Pengguna resmi mengakhiri sesi login (Administrator • globallensn@gmail.com)",
       "action": "LOGOUT SESI",
-      "category": "system"
+      "category": "system",
+      "timestamp": "2026-09-15T19:14:00.779Z"
     },
     "audit_1789499643547_me0d": {
       "id": "audit_1789499643547_me0d",
-      "action": "Login Berhasil",
       "category": "client",
       "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
-      "details": "Login pengguna sukses • Paket: Akses Bulanan (VIP) • IP: 165.99.194.243 • Masa Aktif: 15/10/2026",
-      "timestamp": "2026-09-15T19:14:03.547Z"
+      "timestamp": "2026-09-15T19:14:03.547Z",
+      "action": "Login Berhasil",
+      "details": "Login pengguna sukses • Paket: Akses Bulanan (VIP) • IP: 165.99.194.243 • Masa Aktif: 15/10/2026"
     },
     "audit_1789499643652_ab2t": {
       "id": "audit_1789499643652_ab2t",
-      "details": "User wq berhasil login (USER) • Kode: SATSET-VIP-N2QX4REC-F448",
-      "action": "LOGIN BERHASIL",
-      "timestamp": "2026-09-15T19:14:03.652Z",
       "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
-      "category": "client"
+      "action": "LOGIN BERHASIL",
+      "details": "User wq berhasil login (USER) • Kode: SATSET-VIP-N2QX4REC-F448",
+      "category": "client",
+      "timestamp": "2026-09-15T19:14:03.652Z"
     },
     "audit_1789581414134_xn6q": {
       "id": "audit_1789581414134_xn6q",
+      "action": "Login Berhasil",
+      "timestamp": "2026-09-16T17:56:54.134Z",
       "category": "system",
       "details": "Otentikasi Master Admin sukses dari IP: 169.254.169.126 • Browser: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)",
-      "adminName": "Master Admin (globallensn@gmail.com)",
-      "timestamp": "2026-09-16T17:56:54.134Z",
-      "action": "Login Berhasil"
+      "adminName": "Master Admin (globallensn@gmail.com)"
     },
     "audit_1789581414354_2pt8": {
       "id": "audit_1789581414354_2pt8",
-      "action": "LOGIN BERHASIL",
+      "details": "User Administrator berhasil login (ADMIN) • Kode: globallensn@gmail.com",
       "category": "system",
       "adminName": "Administrator (globallensn@gmail.com)",
       "timestamp": "2026-09-16T17:56:54.354Z",
-      "details": "User Administrator berhasil login (ADMIN) • Kode: globallensn@gmail.com"
+      "action": "LOGIN BERHASIL"
     },
     "audit_1789581426493_d6c7": {
       "id": "audit_1789581426493_d6c7",
+      "adminName": "Administrator (globallensn@gmail.com)",
+      "category": "system",
       "action": "LOGOUT SESI",
       "details": "Pengguna resmi mengakhiri sesi login (Administrator • globallensn@gmail.com)",
-      "timestamp": "2026-09-16T17:57:06.493Z",
-      "category": "system",
-      "adminName": "Administrator (globallensn@gmail.com)"
+      "timestamp": "2026-09-16T17:57:06.493Z"
     },
     "audit_1789581426508_kycy": {
       "id": "audit_1789581426508_kycy",
-      "category": "system",
-      "adminName": "Administrator (globallensn@gmail.com)",
       "details": "Pengguna resmi mengakhiri sesi login dari IP: 169.254.169.126",
+      "adminName": "Administrator (globallensn@gmail.com)",
+      "category": "system",
       "action": "Logout Sesi",
       "timestamp": "2026-09-16T17:57:06.508Z"
     },
     "audit_1789581431201_ilro": {
       "id": "audit_1789581431201_ilro",
-      "category": "client",
       "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "category": "client",
       "timestamp": "2026-09-16T17:57:11.202Z",
       "action": "Login Berhasil",
       "details": "Login pengguna sukses • Paket: Akses Bulanan (VIP) • IP: 169.254.169.126 • Masa Aktif: 15/10/2026"
     },
     "audit_1789581431334_q3t9": {
       "id": "audit_1789581431334_q3t9",
-      "action": "LOGIN BERHASIL",
       "category": "client",
-      "details": "User wq berhasil login (USER) • Kode: SATSET-VIP-N2QX4REC-F448",
       "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
-      "timestamp": "2026-09-16T17:57:11.334Z"
+      "timestamp": "2026-09-16T17:57:11.334Z",
+      "action": "LOGIN BERHASIL",
+      "details": "User wq berhasil login (USER) • Kode: SATSET-VIP-N2QX4REC-F448"
     },
     "audit_1789582123586_uwjl": {
       "id": "audit_1789582123586_uwjl",
-      "action": "LOGOUT SESI",
       "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
-      "category": "client",
       "details": "Pengguna resmi mengakhiri sesi login (wq • SATSET-VIP-N2QX4REC-F448)",
-      "timestamp": "2026-09-16T18:08:43.586Z"
+      "timestamp": "2026-09-16T18:08:43.586Z",
+      "action": "LOGOUT SESI",
+      "category": "client"
     },
     "audit_1789582123588_kqo1": {
       "id": "audit_1789582123588_kqo1",
+      "category": "client",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "action": "Logout Sesi",
+      "timestamp": "2026-09-16T18:08:43.588Z",
+      "details": "Pengguna resmi mengakhiri sesi login dari IP: 169.254.169.126"
+    },
+    "audit_1789657614041_6m2i": {
+      "id": "audit_1789657614041_6m2i",
+      "action": "LOGOUT SESI",
+      "timestamp": "2026-09-17T15:06:54.041Z",
+      "details": "Pengguna resmi mengakhiri sesi login (wq • SATSET-VIP-N2QX4REC-F448)",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "category": "client"
+    },
+    "audit_1789657614042_z7pu": {
+      "id": "audit_1789657614042_z7pu",
+      "timestamp": "2026-09-17T15:06:54.042Z",
+      "category": "client",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "action": "Logout Sesi",
+      "details": "Pengguna resmi mengakhiri sesi login dari IP: 169.254.169.126"
+    },
+    "audit_1789582546305_tesq": {
+      "id": "audit_1789582546305_tesq",
+      "timestamp": "2026-09-16T18:15:46.306Z",
+      "action": "Login Berhasil",
+      "category": "client",
+      "details": "Login pengguna sukses • Paket: Akses Bulanan (VIP) • IP: 169.254.169.126 • Masa Aktif: 15/10/2026",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)"
+    },
+    "audit_1789582546469_gr0z": {
+      "id": "audit_1789582546469_gr0z",
+      "details": "User wq berhasil login (USER) • Kode: SATSET-VIP-N2QX4REC-F448",
+      "timestamp": "2026-09-16T18:15:46.469Z",
+      "action": "LOGIN BERHASIL",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "category": "client"
+    },
+    "audit_1789582807430_eoax": {
+      "id": "audit_1789582807430_eoax",
+      "details": "Pengguna resmi mengakhiri sesi login (wq • SATSET-VIP-N2QX4REC-F448)",
+      "action": "LOGOUT SESI",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "category": "client",
+      "timestamp": "2026-09-16T18:20:07.430Z"
+    },
+    "audit_1789582807473_55kp": {
+      "id": "audit_1789582807473_55kp",
+      "timestamp": "2026-09-16T18:20:07.473Z",
+      "category": "client",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "details": "Pengguna resmi mengakhiri sesi login dari IP: 165.99.194.243",
+      "action": "Logout Sesi"
+    },
+    "audit_1789582811980_ehyb": {
+      "id": "audit_1789582811980_ehyb",
+      "action": "LOGOUT SESI",
+      "timestamp": "2026-09-16T18:20:11.980Z",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "category": "client",
+      "details": "Pengguna resmi mengakhiri sesi login (wq • SATSET-VIP-N2QX4REC-F448)"
+    },
+    "audit_1789582811981_o49p": {
+      "id": "audit_1789582811981_o49p",
+      "details": "Pengguna resmi mengakhiri sesi login dari IP: 169.254.169.126",
+      "timestamp": "2026-09-16T18:20:11.981Z",
+      "category": "client",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "action": "Logout Sesi"
+    },
+    "audit_1789582815356_307n": {
+      "id": "audit_1789582815356_307n",
+      "timestamp": "2026-09-16T18:20:15.356Z",
+      "details": "Otentikasi Master Admin sukses dari IP: 165.99.194.243 • Browser: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)",
+      "action": "Login Berhasil",
+      "category": "system",
+      "adminName": "Master Admin (globallensn@gmail.com)"
+    },
+    "audit_1789582815498_usgm": {
+      "id": "audit_1789582815498_usgm",
+      "details": "User Administrator berhasil login (ADMIN) • Kode: globallensn@gmail.com",
+      "action": "LOGIN BERHASIL",
+      "timestamp": "2026-09-16T18:20:15.498Z",
+      "adminName": "Administrator (globallensn@gmail.com)",
+      "category": "system"
+    },
+    "audit_1789582871339_bljw": {
+      "id": "audit_1789582871339_bljw",
+      "category": "system",
+      "timestamp": "2026-09-16T18:21:11.339Z",
+      "adminName": "Administrator (globallensn@gmail.com)",
+      "details": "Pengguna resmi mengakhiri sesi login dari IP: 165.99.194.243",
+      "action": "Logout Sesi"
+    },
+    "audit_1789582871341_r2d2": {
+      "id": "audit_1789582871341_r2d2",
+      "category": "system",
+      "timestamp": "2026-09-16T18:21:11.341Z",
+      "action": "LOGOUT SESI",
+      "adminName": "Administrator (globallensn@gmail.com)",
+      "details": "Pengguna resmi mengakhiri sesi login (Administrator • globallensn@gmail.com)"
+    },
+    "audit_1789583040766_l18b": {
+      "id": "audit_1789583040766_l18b",
+      "category": "client",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "timestamp": "2026-09-16T18:24:00.767Z",
+      "details": "Login pengguna sukses • Paket: Akses Bulanan (VIP) • IP: 169.254.169.126 • Masa Aktif: 15/10/2026",
+      "action": "Login Berhasil"
+    },
+    "audit_1789583040897_q4xg": {
+      "id": "audit_1789583040897_q4xg",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "category": "client",
+      "action": "LOGIN BERHASIL",
+      "timestamp": "2026-09-16T18:24:00.897Z",
+      "details": "User wq berhasil login (USER) • Kode: SATSET-VIP-N2QX4REC-F448"
+    },
+    "audit_1789583978546_is3c": {
+      "id": "audit_1789583978546_is3c",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "action": "Logout Sesi",
+      "category": "client",
+      "details": "Pengguna resmi mengakhiri sesi login dari IP: 169.254.169.126",
+      "timestamp": "2026-09-16T18:39:38.546Z"
+    },
+    "audit_1789583978547_kqzh": {
+      "id": "audit_1789583978547_kqzh",
+      "action": "LOGOUT SESI",
+      "timestamp": "2026-09-16T18:39:38.547Z",
+      "category": "client",
+      "details": "Pengguna resmi mengakhiri sesi login (wq • SATSET-VIP-N2QX4REC-F448)",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)"
+    },
+    "audit_1789584001163_chkm": {
+      "id": "audit_1789584001163_chkm",
+      "category": "client",
+      "action": "Login Berhasil",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "details": "Login pengguna sukses • Paket: Akses Bulanan (VIP) • IP: 169.254.169.126 • Masa Aktif: 15/10/2026",
+      "timestamp": "2026-09-16T18:40:01.164Z"
+    },
+    "audit_1789584001291_spjl": {
+      "id": "audit_1789584001291_spjl",
+      "details": "User wq berhasil login (USER) • Kode: SATSET-VIP-N2QX4REC-F448",
+      "timestamp": "2026-09-16T18:40:01.291Z",
+      "category": "client",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "action": "LOGIN BERHASIL"
+    },
+    "audit_1789584539570_r9qn": {
+      "id": "audit_1789584539570_r9qn",
+      "details": "Login pengguna sukses • Paket: Akses Bulanan (VIP) • IP: 169.254.169.126 • Masa Aktif: 15/10/2026",
+      "action": "Login Berhasil",
+      "timestamp": "2026-09-16T18:48:59.571Z",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "category": "client"
+    },
+    "audit_1789584539724_p8vy": {
+      "id": "audit_1789584539724_p8vy",
+      "timestamp": "2026-09-16T18:48:59.724Z",
+      "category": "client",
+      "details": "User wq berhasil login (USER) • Kode: SATSET-VIP-N2QX4REC-F448",
+      "action": "LOGIN BERHASIL",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)"
+    },
+    "audit_1789585524279_cglv": {
+      "id": "audit_1789585524279_cglv",
+      "category": "client",
+      "action": "Logout Sesi",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "timestamp": "2026-09-16T19:05:24.279Z",
+      "details": "Pengguna resmi mengakhiri sesi login dari IP: 169.254.169.126"
+    },
+    "audit_1789585524281_4g07": {
+      "id": "audit_1789585524281_4g07",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "action": "LOGOUT SESI",
+      "details": "Pengguna resmi mengakhiri sesi login (wq • SATSET-VIP-N2QX4REC-F448)",
+      "category": "client",
+      "timestamp": "2026-09-16T19:05:24.281Z"
+    },
+    "audit_1789585535017_6zv8": {
+      "id": "audit_1789585535017_6zv8",
+      "timestamp": "2026-09-16T19:05:35.018Z",
+      "category": "client",
+      "details": "Login pengguna sukses • Paket: Akses Bulanan (VIP) • IP: 169.254.169.126 • Masa Aktif: 15/10/2026",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "action": "Login Berhasil"
+    },
+    "audit_1789585535151_bb68": {
+      "id": "audit_1789585535151_bb68",
+      "category": "client",
+      "timestamp": "2026-09-16T19:05:35.151Z",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "action": "LOGIN BERHASIL",
+      "details": "User wq berhasil login (USER) • Kode: SATSET-VIP-N2QX4REC-F448"
+    },
+    "audit_1789585554267_0vou": {
+      "id": "audit_1789585554267_0vou",
+      "details": "Pengguna resmi mengakhiri sesi login (wq • SATSET-VIP-N2QX4REC-F448)",
+      "action": "LOGOUT SESI",
+      "timestamp": "2026-09-16T19:05:54.267Z",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "category": "client"
+    },
+    "audit_1789585554268_a7gv": {
+      "id": "audit_1789585554268_a7gv",
+      "category": "client",
+      "action": "Logout Sesi",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "timestamp": "2026-09-16T19:05:54.268Z",
+      "details": "Pengguna resmi mengakhiri sesi login dari IP: 169.254.169.126"
+    },
+    "audit_1789585573929_l54j": {
+      "id": "audit_1789585573929_l54j",
+      "details": "Login pengguna sukses • Paket: Akses Bulanan (VIP) • IP: 169.254.169.126 • Masa Aktif: 15/10/2026",
+      "action": "Login Berhasil",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "category": "client",
+      "timestamp": "2026-09-16T19:06:13.929Z"
+    },
+    "audit_1789585574086_6orb": {
+      "id": "audit_1789585574086_6orb",
+      "timestamp": "2026-09-16T19:06:14.086Z",
+      "action": "LOGIN BERHASIL",
+      "category": "client",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "details": "User wq berhasil login (USER) • Kode: SATSET-VIP-N2QX4REC-F448"
+    },
+    "audit_1789585809898_y6nz": {
+      "id": "audit_1789585809898_y6nz",
+      "category": "client",
+      "action": "Logout Sesi",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "details": "Pengguna resmi mengakhiri sesi login dari IP: 169.254.169.126",
+      "timestamp": "2026-09-16T19:10:09.898Z"
+    },
+    "audit_1789585809899_39bi": {
+      "id": "audit_1789585809899_39bi",
+      "category": "client",
+      "details": "Pengguna resmi mengakhiri sesi login (wq • SATSET-VIP-N2QX4REC-F448)",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "timestamp": "2026-09-16T19:10:09.899Z",
+      "action": "LOGOUT SESI"
+    },
+    "audit_1789585856689_kugv": {
+      "id": "audit_1789585856689_kugv",
+      "timestamp": "2026-09-16T19:10:56.690Z",
+      "details": "Login pengguna sukses • Paket: Akses Bulanan (VIP) • IP: 169.254.169.126 • Masa Aktif: 15/10/2026",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "action": "Login Berhasil",
+      "category": "client"
+    },
+    "audit_1789585856852_fnzg": {
+      "id": "audit_1789585856852_fnzg",
+      "timestamp": "2026-09-16T19:10:56.852Z",
+      "details": "User wq berhasil login (USER) • Kode: SATSET-VIP-N2QX4REC-F448",
+      "category": "client",
+      "action": "LOGIN BERHASIL",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)"
+    },
+    "audit_1789586106335_8yih": {
+      "id": "audit_1789586106335_8yih",
+      "details": "Pengguna resmi mengakhiri sesi login (wq • SATSET-VIP-N2QX4REC-F448)",
+      "action": "LOGOUT SESI",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "category": "client",
+      "timestamp": "2026-09-16T19:15:06.335Z"
+    },
+    "audit_1789586106343_mspe": {
+      "id": "audit_1789586106343_mspe",
+      "timestamp": "2026-09-16T19:15:06.343Z",
       "details": "Pengguna resmi mengakhiri sesi login dari IP: 169.254.169.126",
       "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
-      "timestamp": "2026-09-16T18:08:43.588Z",
-      "action": "Logout Sesi",
+      "category": "client",
+      "action": "Logout Sesi"
+    },
+    "audit_1789586284685_gwqb": {
+      "id": "audit_1789586284685_gwqb",
+      "timestamp": "2026-09-16T19:18:04.686Z",
+      "action": "Login Berhasil",
+      "category": "client",
+      "details": "Login pengguna sukses • Paket: Akses Bulanan (VIP) • IP: 103.181.254.30 • Masa Aktif: 15/10/2026",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)"
+    },
+    "audit_1789586284854_wsmv": {
+      "id": "audit_1789586284854_wsmv",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "action": "LOGIN BERHASIL",
+      "timestamp": "2026-09-16T19:18:04.854Z",
+      "details": "User wq berhasil login (USER) • Kode: SATSET-VIP-N2QX4REC-F448",
       "category": "client"
+    },
+    "audit_1789586636591_eoyd": {
+      "id": "audit_1789586636591_eoyd",
+      "action": "Login Berhasil",
+      "category": "client",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "timestamp": "2026-09-16T19:23:56.592Z",
+      "details": "Login pengguna sukses • Paket: Akses Bulanan (VIP) • IP: 169.254.169.126 • Masa Aktif: 15/10/2026"
+    },
+    "audit_1789586636751_xkh8": {
+      "id": "audit_1789586636751_xkh8",
+      "timestamp": "2026-09-16T19:23:56.751Z",
+      "category": "client",
+      "details": "User wq berhasil login (USER) • Kode: SATSET-VIP-N2QX4REC-F448",
+      "action": "LOGIN BERHASIL",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)"
+    },
+    "audit_1789587599017_hcog": {
+      "id": "audit_1789587599017_hcog",
+      "action": "LOGOUT SESI",
+      "category": "client",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "details": "Pengguna resmi mengakhiri sesi login (wq • SATSET-VIP-N2QX4REC-F448)",
+      "timestamp": "2026-09-16T19:39:59.017Z"
+    },
+    "audit_1789587599037_g00y": {
+      "id": "audit_1789587599037_g00y",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "category": "client",
+      "action": "Logout Sesi",
+      "timestamp": "2026-09-16T19:39:59.037Z",
+      "details": "Pengguna resmi mengakhiri sesi login dari IP: 169.254.169.126"
+    },
+    "audit_1789587707342_9urf": {
+      "id": "audit_1789587707342_9urf",
+      "details": "Login pengguna sukses • Paket: Akses Bulanan (VIP) • IP: 169.254.169.126 • Masa Aktif: 15/10/2026",
+      "timestamp": "2026-09-16T19:41:47.343Z",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "category": "client",
+      "action": "Login Berhasil"
+    },
+    "audit_1789587707525_eb1j": {
+      "id": "audit_1789587707525_eb1j",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "details": "User wq berhasil login (USER) • Kode: SATSET-VIP-N2QX4REC-F448",
+      "action": "LOGIN BERHASIL",
+      "category": "client",
+      "timestamp": "2026-09-16T19:41:47.525Z"
+    },
+    "audit_1789587932412_a3lu": {
+      "id": "audit_1789587932412_a3lu",
+      "timestamp": "2026-09-16T19:45:32.412Z",
+      "category": "client",
+      "action": "Logout Sesi",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "details": "Pengguna resmi mengakhiri sesi login dari IP: 165.99.194.243"
+    },
+    "audit_1789587932437_jpwr": {
+      "id": "audit_1789587932437_jpwr",
+      "details": "Pengguna resmi mengakhiri sesi login (wq • SATSET-VIP-N2QX4REC-F448)",
+      "action": "LOGOUT SESI",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "category": "client",
+      "timestamp": "2026-09-16T19:45:32.437Z"
+    },
+    "audit_1789587951137_harv": {
+      "id": "audit_1789587951137_harv",
+      "adminName": "Master Admin (globallensn@gmail.com)",
+      "action": "Login Berhasil",
+      "details": "Otentikasi Master Admin sukses dari IP: 165.99.194.243 • Browser: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)",
+      "category": "system",
+      "timestamp": "2026-09-16T19:45:51.137Z"
+    },
+    "audit_1789587951317_ec7l": {
+      "id": "audit_1789587951317_ec7l",
+      "action": "LOGIN BERHASIL",
+      "details": "User Administrator berhasil login (ADMIN) • Kode: globallensn@gmail.com",
+      "timestamp": "2026-09-16T19:45:51.317Z",
+      "category": "system",
+      "adminName": "Administrator (globallensn@gmail.com)"
+    },
+    "audit_1789587957458_rd6w": {
+      "id": "audit_1789587957458_rd6w",
+      "action": "Logout Sesi",
+      "timestamp": "2026-09-16T19:45:57.458Z",
+      "details": "Pengguna resmi mengakhiri sesi login dari IP: 165.99.194.243",
+      "category": "system",
+      "adminName": "Administrator (globallensn@gmail.com)"
+    },
+    "audit_1789587957499_udj5": {
+      "id": "audit_1789587957499_udj5",
+      "category": "system",
+      "adminName": "Administrator (globallensn@gmail.com)",
+      "details": "Pengguna resmi mengakhiri sesi login (Administrator • globallensn@gmail.com)",
+      "timestamp": "2026-09-16T19:45:57.499Z",
+      "action": "LOGOUT SESI"
+    },
+    "audit_1789587959803_v88k": {
+      "id": "audit_1789587959803_v88k",
+      "category": "client",
+      "timestamp": "2026-09-16T19:45:59.804Z",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "action": "Login Berhasil",
+      "details": "Login pengguna sukses • Paket: Akses Bulanan (VIP) • IP: 165.99.194.243 • Masa Aktif: 15/10/2026"
+    },
+    "audit_1789587960038_niq5": {
+      "id": "audit_1789587960038_niq5",
+      "category": "client",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "details": "User wq berhasil login (USER) • Kode: SATSET-VIP-N2QX4REC-F448",
+      "timestamp": "2026-09-16T19:46:00.038Z",
+      "action": "LOGIN BERHASIL"
+    },
+    "audit_1789587993877_b2ix": {
+      "id": "audit_1789587993877_b2ix",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "category": "client",
+      "details": "Pengguna resmi mengakhiri sesi login (wq • SATSET-VIP-N2QX4REC-F448)",
+      "timestamp": "2026-09-16T19:46:33.877Z",
+      "action": "LOGOUT SESI"
+    },
+    "audit_1789587993897_k798": {
+      "id": "audit_1789587993897_k798",
+      "timestamp": "2026-09-16T19:46:33.897Z",
+      "details": "Pengguna resmi mengakhiri sesi login dari IP: 169.254.169.126",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "category": "client",
+      "action": "Logout Sesi"
+    },
+    "audit_1789587997037_4kjo": {
+      "id": "audit_1789587997037_4kjo",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "category": "client",
+      "timestamp": "2026-09-16T19:46:37.037Z",
+      "details": "Login pengguna sukses • Paket: Akses Bulanan (VIP) • IP: 169.254.169.126 • Masa Aktif: 15/10/2026",
+      "action": "Login Berhasil"
+    },
+    "audit_1789587997214_iya9": {
+      "id": "audit_1789587997214_iya9",
+      "timestamp": "2026-09-16T19:46:37.214Z",
+      "action": "LOGIN BERHASIL",
+      "category": "client",
+      "details": "User wq berhasil login (USER) • Kode: SATSET-VIP-N2QX4REC-F448",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)"
+    },
+    "audit_1789588330565_ceqj": {
+      "id": "audit_1789588330565_ceqj",
+      "action": "Logout Sesi",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "category": "client",
+      "details": "Pengguna resmi mengakhiri sesi login dari IP: 165.99.194.243",
+      "timestamp": "2026-09-16T19:52:10.565Z"
+    },
+    "audit_1789588330611_yk2n": {
+      "id": "audit_1789588330611_yk2n",
+      "timestamp": "2026-09-16T19:52:10.611Z",
+      "category": "client",
+      "action": "LOGOUT SESI",
+      "details": "Pengguna resmi mengakhiri sesi login (wq • SATSET-VIP-N2QX4REC-F448)",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)"
+    },
+    "audit_1789588337884_2b04": {
+      "id": "audit_1789588337884_2b04",
+      "details": "Login pengguna sukses • Paket: Akses Bulanan (VIP) • IP: 165.99.194.243 • Masa Aktif: 15/10/2026",
+      "action": "Login Berhasil",
+      "timestamp": "2026-09-16T19:52:17.885Z",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "category": "client"
+    },
+    "audit_1789588338014_tvab": {
+      "id": "audit_1789588338014_tvab",
+      "category": "client",
+      "timestamp": "2026-09-16T19:52:18.014Z",
+      "action": "LOGIN BERHASIL",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "details": "User wq berhasil login (USER) • Kode: SATSET-VIP-N2QX4REC-F448"
+    },
+    "audit_1789657724021_hcz0": {
+      "id": "audit_1789657724021_hcz0",
+      "action": "Login Berhasil",
+      "details": "Login pengguna sukses • Paket: Akses Bulanan (VIP) • IP: 169.254.169.126 • Masa Aktif: 15/10/2026",
+      "timestamp": "2026-09-17T15:08:44.023Z",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "category": "client"
+    },
+    "audit_1789657724188_z8yt": {
+      "id": "audit_1789657724188_z8yt",
+      "timestamp": "2026-09-17T15:08:44.188Z",
+      "category": "client",
+      "details": "User wq berhasil login (USER) • Kode: SATSET-VIP-N2QX4REC-F448",
+      "action": "LOGIN BERHASIL",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)"
+    },
+    "audit_1789658073225_9730": {
+      "id": "audit_1789658073225_9730",
+      "timestamp": "2026-09-17T15:14:33.225Z",
+      "action": "LOGOUT SESI",
+      "details": "Pengguna resmi mengakhiri sesi login (wq • SATSET-VIP-N2QX4REC-F448)",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "category": "client"
+    },
+    "audit_1789658073227_vv1d": {
+      "id": "audit_1789658073227_vv1d",
+      "timestamp": "2026-09-17T15:14:33.227Z",
+      "category": "client",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "details": "Pengguna resmi mengakhiri sesi login dari IP: 169.254.169.126",
+      "action": "Logout Sesi"
+    },
+    "audit_1789658283910_h9wk": {
+      "id": "audit_1789658283910_h9wk",
+      "action": "Login Berhasil",
+      "timestamp": "2026-09-17T15:18:03.910Z",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "details": "Login pengguna sukses • Paket: Akses Bulanan (VIP) • IP: 169.254.169.126 • Masa Aktif: 15/10/2026",
+      "category": "client"
+    },
+    "audit_1789658206402_dr39": {
+      "id": "audit_1789658206402_dr39",
+      "action": "Logout Sesi",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "details": "Pengguna resmi mengakhiri sesi login dari IP: 165.99.194.243",
+      "category": "client",
+      "timestamp": "2026-09-17T15:16:46.402Z"
+    },
+    "audit_1789658206404_su94": {
+      "id": "audit_1789658206404_su94",
+      "details": "Pengguna resmi mengakhiri sesi login (wq • SATSET-VIP-N2QX4REC-F448)",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "category": "client",
+      "action": "LOGOUT SESI",
+      "timestamp": "2026-09-17T15:16:46.404Z"
+    },
+    "audit_1789658244910_k9oj": {
+      "id": "audit_1789658244910_k9oj",
+      "category": "client",
+      "action": "Login Berhasil",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "timestamp": "2026-09-17T15:17:24.911Z",
+      "details": "Login pengguna sukses • Paket: Akses Bulanan (VIP) • IP: 165.99.194.243 • Masa Aktif: 15/10/2026"
+    },
+    "audit_1789658245085_039f": {
+      "id": "audit_1789658245085_039f",
+      "details": "User wq berhasil login (USER) • Kode: SATSET-VIP-N2QX4REC-F448",
+      "timestamp": "2026-09-17T15:17:25.085Z",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "category": "client",
+      "action": "LOGIN BERHASIL"
+    },
+    "audit_1789658284065_ijie": {
+      "id": "audit_1789658284065_ijie",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "details": "User wq berhasil login (USER) • Kode: SATSET-VIP-N2QX4REC-F448",
+      "action": "LOGIN BERHASIL",
+      "category": "client",
+      "timestamp": "2026-09-17T15:18:04.065Z"
+    },
+    "audit_1789658336655_yprh": {
+      "id": "audit_1789658336655_yprh",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "category": "client",
+      "timestamp": "2026-09-17T15:18:56.655Z",
+      "action": "Logout Sesi",
+      "details": "Pengguna resmi mengakhiri sesi login dari IP: 169.254.169.126"
+    },
+    "audit_1789658336657_3qqr": {
+      "id": "audit_1789658336657_3qqr",
+      "action": "LOGOUT SESI",
+      "details": "Pengguna resmi mengakhiri sesi login (wq • SATSET-VIP-N2QX4REC-F448)",
+      "timestamp": "2026-09-17T15:18:56.657Z",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "category": "client"
+    },
+    "audit_1789658633385_asgg": {
+      "id": "audit_1789658633385_asgg",
+      "category": "client",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "timestamp": "2026-09-17T15:23:53.385Z",
+      "action": "Login Berhasil",
+      "details": "Login pengguna sukses • Paket: Akses Bulanan (VIP) • IP: 169.254.169.126 • Masa Aktif: 15/10/2026"
+    },
+    "audit_1789658633526_n61w": {
+      "id": "audit_1789658633526_n61w",
+      "timestamp": "2026-09-17T15:23:53.526Z",
+      "category": "client",
+      "details": "User wq berhasil login (USER) • Kode: SATSET-VIP-N2QX4REC-F448",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "action": "LOGIN BERHASIL"
+    },
+    "audit_1789659432705_78vg": {
+      "id": "audit_1789659432705_78vg",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "category": "client",
+      "action": "LOGOUT SESI",
+      "details": "Pengguna resmi mengakhiri sesi login (wq • SATSET-VIP-N2QX4REC-F448)",
+      "timestamp": "2026-09-17T15:37:12.705Z"
+    },
+    "audit_1789659432707_6msu": {
+      "id": "audit_1789659432707_6msu",
+      "action": "Logout Sesi",
+      "category": "client",
+      "timestamp": "2026-09-17T15:37:12.707Z",
+      "details": "Pengguna resmi mengakhiri sesi login dari IP: 169.254.169.126",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)"
+    },
+    "audit_1789659792099_2y9x": {
+      "id": "audit_1789659792099_2y9x",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "category": "client",
+      "timestamp": "2026-09-17T15:43:12.100Z",
+      "action": "Login Berhasil",
+      "details": "Login pengguna sukses • Paket: Akses Bulanan (VIP) • IP: 169.254.169.126 • Masa Aktif: 15/10/2026"
+    },
+    "audit_1789659792300_ac1l": {
+      "id": "audit_1789659792300_ac1l",
+      "category": "client",
+      "action": "LOGIN BERHASIL",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "timestamp": "2026-09-17T15:43:12.300Z",
+      "details": "User wq berhasil login (USER) • Kode: SATSET-VIP-N2QX4REC-F448"
+    },
+    "audit_1789659799989_bvm0": {
+      "id": "audit_1789659799989_bvm0",
+      "timestamp": "2026-09-17T15:43:19.989Z",
+      "category": "client",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "action": "LOGOUT SESI",
+      "details": "Pengguna resmi mengakhiri sesi login (wq • SATSET-VIP-N2QX4REC-F448)"
+    },
+    "audit_1789659799991_qwda": {
+      "id": "audit_1789659799991_qwda",
+      "category": "client",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "action": "Logout Sesi",
+      "timestamp": "2026-09-17T15:43:19.991Z",
+      "details": "Pengguna resmi mengakhiri sesi login dari IP: 169.254.169.126"
+    },
+    "audit_1789660013267_27yj": {
+      "id": "audit_1789660013267_27yj",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "details": "Login pengguna sukses • Paket: Akses Bulanan (VIP) • IP: 169.254.169.126 • Masa Aktif: 15/10/2026",
+      "action": "Login Berhasil",
+      "timestamp": "2026-09-17T15:46:53.268Z",
+      "category": "client"
+    },
+    "audit_1789660013540_osgb": {
+      "id": "audit_1789660013540_osgb",
+      "action": "LOGIN BERHASIL",
+      "adminName": "wq (SATSET-VIP-N2QX4REC-F448)",
+      "category": "client",
+      "details": "User wq berhasil login (USER) • Kode: SATSET-VIP-N2QX4REC-F448",
+      "timestamp": "2026-09-17T15:46:53.540Z"
     }
   },
   "clients": {
@@ -2039,111 +2902,111 @@
     },
     "cli_001": {
       "id": "cli_001",
-      "status": "active",
-      "whatsapp": "081234567890",
-      "email": "rizky@gmail.com",
-      "usageCount": 0,
-      "packageName": "Akses Bulanan (VIP)",
-      "lastLoginAt": 1786003200000,
-      "name": "Rizky Ramadhan",
-      "role": "user",
-      "accessCode": "SATSET-882194",
-      "expiryDate": "2026-08-31T10:00:00.000Z",
       "type": "standard",
       "maxDailyTokens": 50,
-      "startDate": "2026-08-01T10:00:00.000Z",
+      "expiryDate": "2026-08-31T10:00:00.000Z",
+      "email": "rizky@gmail.com",
+      "status": "active",
+      "usageCount": 0,
+      "packageId": "bulanan",
+      "lastLoginAt": 1786003200000,
+      "name": "Rizky Ramadhan",
+      "accessCode": "SATSET-882194",
+      "whatsapp": "081234567890",
       "toolUsage": {
-        "videoToPrompt": 15,
         "photoPrompt": 6,
-        "frameExtractor": 4,
         "contentIdeas": 8,
+        "frameExtractor": 4,
+        "videoToPrompt": 15,
         "tiktokDownloader": 12
       },
-      "packageId": "bulanan",
-      "createdAt": "2026-08-01T10:00:00.000Z",
+      "startDate": "2026-08-01T10:00:00.000Z",
       "allowedFeatures": [],
+      "createdAt": "2026-08-01T10:00:00.000Z",
+      "role": "user",
+      "packageName": "Akses Bulanan (VIP)",
       "price": 149000
     },
     "cli_002": {
       "id": "cli_002",
-      "allowedFeatures": [],
       "status": "expiring_soon",
-      "type": "standard",
-      "price": 49000,
-      "startDate": "2026-08-02T12:00:00.000Z",
+      "email": "budi.santoso@yahoo.com",
+      "whatsapp": "085711223344",
+      "packageName": "Akses Mingguan",
+      "packageId": "mingguan",
       "toolUsage": {
-        "videoToPrompt": 4,
         "photoPrompt": 2,
         "contentIdeas": 3,
         "tiktokDownloader": 5,
+        "videoToPrompt": 4,
         "frameExtractor": 1
       },
+      "startDate": "2026-08-02T12:00:00.000Z",
+      "role": "user",
+      "type": "standard",
       "expiryDate": "2026-08-09T12:00:00.000Z",
-      "packageId": "mingguan",
-      "createdAt": "2026-08-02T12:00:00.000Z",
-      "accessCode": "SATSET-331209",
+      "allowedFeatures": [],
       "lastLoginAt": 1785940200000,
-      "whatsapp": "085711223344",
-      "email": "budi.santoso@yahoo.com",
+      "createdAt": "2026-08-02T12:00:00.000Z",
       "usageCount": 0,
       "name": "Budi Santoso",
-      "maxDailyTokens": 50,
-      "role": "user",
-      "packageName": "Akses Mingguan"
+      "accessCode": "SATSET-331209",
+      "price": 49000,
+      "maxDailyTokens": 50
     },
     "cli_1789406536309_am3a": {
       "id": "cli_1789406536309_am3a",
-      "packageName": "Akses Bulanan (VIP)",
-      "allowedFeatures": [],
-      "status": "active",
-      "usageCount": 0,
-      "price": 149000,
       "type": "standard",
-      "whatsapp": "",
-      "lastLoginAt": "2026-09-15T17:48:08.429Z",
-      "accessCode": "SATSET-VIP-S2DQNNVC-F4BA",
-      "maxDailyTokens": 50,
-      "startDate": "2026-09-14T17:22:16.309Z",
+      "status": "active",
       "expiryDate": "2026-10-14T17:22:16.309Z",
-      "email": "",
-      "createdAt": "2026-09-14T17:22:16.309Z",
+      "whatsapp": "",
+      "usageCount": 0,
+      "packageId": "bulanan",
+      "packageName": "Akses Bulanan (VIP)",
       "name": "a",
-      "role": "user",
+      "maxDailyTokens": 50,
+      "accessCode": "SATSET-VIP-S2DQNNVC-F4BA",
+      "startDate": "2026-09-14T17:22:16.309Z",
       "toolUsage": {
-        "photoPrompt": 0,
-        "videoToPrompt": 0,
         "frameExtractor": 0,
         "contentIdeas": 0,
-        "tiktokDownloader": 0
+        "tiktokDownloader": 0,
+        "photoPrompt": 0,
+        "videoToPrompt": 0
       },
-      "packageId": "bulanan"
+      "price": 149000,
+      "createdAt": "2026-09-14T17:22:16.309Z",
+      "email": "",
+      "allowedFeatures": [],
+      "role": "user",
+      "lastLoginAt": "2026-09-15T17:48:08.429Z"
     },
     "cli_1789494684423_3wnb": {
       "id": "cli_1789494684423_3wnb",
-      "whatsapp": "",
-      "createdAt": "2026-09-15T17:51:24.423Z",
-      "type": "standard",
-      "packageId": "bulanan",
+      "expiryDate": "2026-10-15T17:51:24.423Z",
       "toolUsage": {
+        "photoPrompt": 0,
+        "frameExtractor": 0,
         "tiktokDownloader": 0,
         "videoToPrompt": 0,
-        "contentIdeas": 0,
-        "photoPrompt": 0,
-        "frameExtractor": 0
+        "contentIdeas": 0
       },
-      "packageName": "Akses Bulanan (VIP)",
-      "usageCount": 0,
-      "lastLoginAt": "2026-09-16T17:57:11.074Z",
-      "price": 149000,
-      "allowedFeatures": [],
-      "expiryDate": "2026-10-15T17:51:24.423Z",
-      "email": "",
-      "status": "active",
-      "role": "user",
       "startDate": "2026-09-15T17:51:24.423Z",
-      "maxDailyTokens": 50,
+      "packageName": "Akses Bulanan (VIP)",
+      "type": "standard",
+      "packageId": "bulanan",
+      "usageCount": 0,
+      "price": 149000,
+      "name": "wq",
       "accessCode": "SATSET-VIP-N2QX4REC-F448",
-      "name": "wq"
+      "allowedFeatures": [],
+      "lastLoginAt": "2026-09-17T15:46:53.022Z",
+      "maxDailyTokens": 50,
+      "email": "",
+      "whatsapp": "",
+      "createdAt": "2026-09-15T17:51:24.423Z",
+      "status": "active",
+      "role": "user"
     }
   },
   "accessCodes": {
@@ -2161,27 +3024,27 @@
     },
     "doc_1789406535768_vpx4a": {
       "id": "doc_1789406535768_vpx4a",
+      "code": "SATSET-VIP-S2DQNNVC-F4BA",
       "note": "Client a (Akses Bulanan (VIP))",
-      "createdAt": 1789406536022,
-      "code": "SATSET-VIP-S2DQNNVC-F4BA"
+      "createdAt": 1789406536022
     },
     "doc_1789406535849_vz017": {
       "id": "doc_1789406535849_vz017",
-      "code": "SATSET-331209",
       "createdAt": 1789406535732,
+      "code": "SATSET-331209",
       "note": "Client Budi Santoso (Akses Mingguan)"
     },
     "doc_1789406535875_6a7z3": {
       "id": "doc_1789406535875_6a7z3",
+      "note": "Client Rizky Ramadhan (Akses Bulanan (VIP))",
       "code": "SATSET-882194",
-      "createdAt": 1789406535732,
-      "note": "Client Rizky Ramadhan (Akses Bulanan (VIP))"
+      "createdAt": 1789406535732
     },
     "doc_1789494683339_6rtm3": {
       "id": "doc_1789494683339_6rtm3",
-      "createdAt": 1789494683559,
       "note": "Client wq (Akses Bulanan (VIP))",
-      "code": "SATSET-VIP-N2QX4REC-F448"
+      "code": "SATSET-VIP-N2QX4REC-F448",
+      "createdAt": 1789494683559
     }
   },
   "packages": {
@@ -2421,23 +3284,75 @@
       "latencyMs": 7456,
       "keySource": "env",
       "userCode": "SATSET-VIP-N2QX4REC-F448"
+    },
+    "log_1789660229993_32lx": {
+      "id": "log_1789660229993_32lx",
+      "keyId": "env_primary_gemini_key",
+      "keyMasked": "AQ.Ab8••••nH0g",
+      "endpoint": "/api/content-ideas-stage-1",
+      "timestamp": "2026-09-17T15:50:29.993Z",
+      "status": "success",
+      "modelUsed": "gemini-3.1-flash-lite",
+      "toolName": "Content Ideas Stage 1",
+      "latencyMs": 11179,
+      "keySource": "env",
+      "userCode": "SATSET-VIP-N2QX4REC-F448"
+    },
+    "log_1789660238949_synq": {
+      "id": "log_1789660238949_synq",
+      "keyId": "env_primary_gemini_key",
+      "keyMasked": "AQ.Ab8••••nH0g",
+      "endpoint": "/api/content-ideas-query-council",
+      "timestamp": "2026-09-17T15:50:38.949Z",
+      "status": "success",
+      "modelUsed": "gemini-3.1-flash-lite",
+      "toolName": "Content Ideas Query Council",
+      "latencyMs": 8877,
+      "keySource": "env",
+      "userCode": "SATSET-VIP-N2QX4REC-F448"
+    },
+    "log_1789660243582_7hb0": {
+      "id": "log_1789660243582_7hb0",
+      "keyId": "env_primary_gemini_key",
+      "keyMasked": "AQ.Ab8••••nH0g",
+      "endpoint": "/api/content-ideas-stage-2",
+      "timestamp": "2026-09-17T15:50:43.582Z",
+      "status": "success",
+      "modelUsed": "gemini-3.1-flash-lite",
+      "toolName": "Content Ideas Stage 2",
+      "latencyMs": 4538,
+      "keySource": "env",
+      "userCode": "SATSET-VIP-N2QX4REC-F448"
+    },
+    "log_1789660261255_zip3": {
+      "id": "log_1789660261255_zip3",
+      "keyId": "env_primary_gemini_key",
+      "keyMasked": "AQ.Ab8••••nH0g",
+      "endpoint": "/api/orchestrator-pipeline",
+      "timestamp": "2026-09-17T15:51:01.255Z",
+      "status": "success",
+      "modelUsed": "gemini-3.5-flash-lite",
+      "toolName": "Orchestrator Pipeline",
+      "latencyMs": 2114,
+      "keySource": "env",
+      "userCode": "SATSET-VIP-N2QX4REC-F448"
     }
   },
   "apiKeys": {
     "test_1": {
       "id": "test_1",
-      "key": "AIzaSyMockKeyForTestingPollFormat12345",
-      "alias": "Test Key",
-      "status": "revoked",
-      "verifiedByAdmin": false,
-      "lastPolledAt": "2026-09-16T18:11:18.012Z",
-      "pollStatus": "revoked",
       "lastTestedLatency": 61,
       "lastTestedModel": "gemini-3.1-flash-lite",
+      "alias": "Test Key",
+      "lastPolledAt": "2026-09-16T18:11:18.012Z",
+      "verifiedByAdmin": false,
+      "status": "revoked",
       "cooldownUntil": 0,
+      "key": "AIzaSyMockKeyForTestingPollFormat12345",
       "modelStatus": {
         "gemini-3.1-flash-lite": "dead"
-      }
+      },
+      "pollStatus": "revoked"
     }
   }
 }

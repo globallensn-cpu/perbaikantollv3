@@ -31,7 +31,8 @@ import {
   ShoppingBag,
   Clipboard,
   ExternalLink,
-  X
+  X,
+  FileText
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import ReactMarkdown from 'react-markdown';
@@ -43,6 +44,7 @@ import EngagingLoadingState from '../common/EngagingLoadingState';
 import { useAccessGate } from '../../hooks/useAccessGate';
 import { useGenerationLog } from '../../hooks/useGenerationLog';
 import BatchPhotoPromptModal, { ClipSummaryItem } from '../modals/BatchPhotoPromptModal';
+import ViralReplicaOutputView from './ViralReplicaOutputView';
 
 interface ContentIdeasToolProps {
   initialVideoFile?: File | null;
@@ -158,7 +160,10 @@ export const parseClipSegmentsFromScenePrompts = (text: string): IdeaClipSegment
       visualText ? `Visual: ${visualText}` : '',
       aksiText ? `Aksi: ${aksiText}` : '',
       speechOrSub,
-    ].filter(Boolean).join('\n') || body;
+    ].filter(Boolean).map(s => {
+      const trimmed = s.trim();
+      return /[.!?]$/.test(trimmed) ? trimmed : `${trimmed}.`;
+    }).join(' ') || body;
 
     clips.push({
       id: timelineIdx,
@@ -277,12 +282,11 @@ export default function ContentIdeasTool({
   const [targetAI, setTargetAI] = useState<string>('general');
   const [numIdeas, setNumIdeas] = useState<number>(1);
 
-  const [aeoQueryMode, setAeoQueryMode] = useState<'short' | 'long' | 'both'>('both');
+  // Mode AEO Target diatur otomatis ('both': short & long-tail search intent)
+  const aeoQueryMode: 'short' | 'long' | 'both' = 'both';
   const [enableBigSound, setEnableBigSound] = useState<boolean>(true);
   const [enableTextOverlay, setEnableTextOverlay] = useState<boolean>(true);
-  
-  const [userSeedQueries, setUserSeedQueries] = useState<string[]>([]);
-  const [seedQueryInput, setSeedQueryInput] = useState<string>('');
+  const userSeedQueries: string[] = [];
 
   const [refImageFile, setRefImageFile] = useState<File | null>(null);
   const [refPreviewUrl, setRefPreviewUrl] = useState<string | null>(null);
@@ -305,6 +309,9 @@ export default function ContentIdeasTool({
   const [copiedHashtagsId, setCopiedHashtagsId] = useState<number | null>(null);
   const [copiedScenesId, setCopiedScenesId] = useState<number | null>(null);
   const [copiedClipKey, setCopiedClipKey] = useState<string | null>(null);
+  const [copiedTag, setCopiedTag] = useState<string | null>(null);
+  const [activeIdeaIndex, setActiveIdeaIndex] = useState<number>(0);
+  const [showStrategicDetails, setShowStrategicDetails] = useState<boolean>(false);
   const [copiedAll, setCopiedAll] = useState(false);
   const [viewMode, setViewMode] = useState<'cards' | 'raw'>('cards');
 
@@ -774,7 +781,8 @@ export default function ContentIdeasTool({
 
       // Extract caption specifically from **AEO Caption SEO** or **Caption Relevan**: section
       let caption = '';
-      const captionSectionMatch = block.match(/\*\*(?:AEO Caption SEO|Caption Relevan)\*\*:\s*([\s\S]*?)(?=\n- \*\*Hashtag|\n#|\n---|$)/i);
+      const captionSectionMatch = block.match(/\*\*(?:AEO Caption SEO|Caption SEO TikTok|Caption SEO|Caption Relevan|Caption)[^\*]*\*\*:\s*([\s\S]*?)(?=\n- \*\*Hashtag|\n#|\n---|$)/i) ||
+        block.match(/(?:Caption SEO|Caption Relevan|Caption):\s*([\s\S]*?)(?=\n- \*\*Hashtag|\n#|\n---|$)/i);
       if (captionSectionMatch) {
         const rawCaptionText = captionSectionMatch[1].trim();
         // Check if rawCaptionText is wrapped in ```text ... ``` or """text ... """
@@ -791,7 +799,8 @@ export default function ContentIdeasTool({
 
       // Extract Hashtags (Maximal 5 Hashtags)
       let hashtags = '';
-      const lineMatch = block.match(/\*\*Hashtag Relevan\*\*:\s*([^\n]+)/i);
+      const lineMatch = block.match(/\*\*(?:Hashtag Relevan & SEO Search|Hashtag Relevan|Hashtag SEO|Hashtag)[^\*]*\*\*:\s*([^\n]+)/i) ||
+        block.match(/(?:Hashtag Relevan|Hashtag SEO|Hashtag):\s*([^\n]+)/i);
       if (lineMatch && lineMatch[1]) {
         hashtags = lineMatch[1].replace(/['"]/g, '').trim();
       } else {
@@ -928,6 +937,42 @@ export default function ContentIdeasTool({
     });
 
     setTimeout(() => setCopiedHashtagsId(null), 2000);
+  };
+
+  const copySingleTag = (tag: string) => {
+    const clean = tag.startsWith('#') ? tag : `#${tag}`;
+    navigator.clipboard.writeText(clean);
+    setCopiedTag(clean);
+    learningSync.track('prompt_copied', {
+      type: 'content_idea_single_tag',
+      text: clean,
+    });
+    setTimeout(() => setCopiedTag(null), 1500);
+  };
+
+  const copyAllPrompts = (idea: ParsedIdea) => {
+    let allText = '';
+    if (idea.clips && idea.clips.length > 0) {
+      allText = idea.clips
+        .map((c, i) => {
+          const promptBody = (c.aiPrompt || c.actionAndVO || '').trim().replace(/^```(?:text)?\n?|```$/g, '');
+          return `[Segmen Prompt Klip ${c.id || i + 1} (${c.timeRange})]\n${promptBody}`;
+        })
+        .join('\n\n');
+    } else {
+      allText = idea.scenePrompts;
+    }
+
+    navigator.clipboard.writeText(allText);
+    setCopiedScenesId(idea.id);
+
+    learningSync.track('prompt_copied', {
+      type: 'content_idea_all_prompts',
+      ideaId: idea.id,
+      text: allText,
+    });
+
+    setTimeout(() => setCopiedScenesId(null), 2000);
   };
 
   const copyScenesOnly = (idea: ParsedIdea) => {
@@ -1263,8 +1308,8 @@ export default function ContentIdeasTool({
           </div>
         </div>
 
-        {/* Configurations Row: Duration, Segment Split & AEO Mode */}
-        <div className="pt-4 border-t border-slate-100 grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Configurations Row: Duration & Segment Split */}
+        <div className="pt-4 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Total Durasi Template Buttons (10, 20, 30, 40, 50, 60, 70 Detik) */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
@@ -1312,23 +1357,6 @@ export default function ContentIdeasTool({
               <option value="10">Tiap 10 Detik per Klip</option>
               <option value="15">Tiap 15 Detik per Klip</option>
               <option value="auto">Pecah Otomatis Sesuai Adegan</option>
-            </select>
-          </div>
-
-          {/* AEO Mode Selection */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-              <Search className="w-3.5 h-3.5 text-indigo-500" />
-              Mode AEO Target
-            </label>
-            <select
-              value={aeoQueryMode}
-              onChange={(e) => setAeoQueryMode(e.target.value as 'short' | 'long' | 'both')}
-              className="w-full h-11 px-3.5 rounded-xl bg-white border border-slate-200 focus:border-indigo-500 text-slate-900 text-xs focus:outline-none cursor-pointer"
-            >
-              <option value="short">Short Queries Saja (1-4 kata)</option>
-              <option value="long">Long-Tail Queries Saja (Konversasional)</option>
-              <option value="both">Keduanya (Short & Long Tail)</option>
             </select>
           </div>
         </div>
@@ -1426,44 +1454,6 @@ export default function ContentIdeasTool({
           </div>
         </div>
 
-        {/* User Seed Queries Input */}
-        <div className="pt-4 border-t border-slate-100">
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-slate-800 uppercase tracking-wider block">
-              Query Pencarian Manual (Opsional, Maks 10)
-            </label>
-            <p className="text-[10px] text-slate-500 mb-2">Ketik query yang Anda YAKIN dicari audiens Anda (1 query per baris). Kalau diisi, AI akan fokus memperluas dari query ini — mengurangi risiko AI menebak-nebak/halusinasi.</p>
-            <textarea
-              value={seedQueryInput}
-              onChange={(e) => {
-                const val = e.target.value;
-                const lines = val.split('\n');
-                const processed = [];
-                let count = 0;
-                for (const line of lines) {
-                  const truncated = line.substring(0, 80);
-                  if (truncated.trim().length > 0) {
-                    if (count < 10) {
-                      count++;
-                      processed.push(truncated);
-                    }
-                  } else {
-                    processed.push(truncated);
-                  }
-                }
-                const finalStr = processed.join('\n');
-                setSeedQueryInput(finalStr);
-                setUserSeedQueries(processed.map(l => l.trim()).filter(l => l.length > 0));
-              }}
-              placeholder="Contoh:&#10;skincare murah&#10;rekomendasi skincare jerawat"
-              rows={3}
-              className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-indigo-500 transition-colors"
-            />
-            <div className="text-right mt-1">
-              <span className="text-[10px] font-bold text-slate-500">{userSeedQueries.length}/10 query terisi</span>
-            </div>
-          </div>
-        </div>
 
         {/* Generate Action Button */}
         <div className="pt-2">
@@ -1521,512 +1511,19 @@ export default function ContentIdeasTool({
             animate={{ opacity: 1, y: 0 }}
             className="space-y-6"
           >
-            {/* Header Control Toolbar */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 shadow-2xs">
-                  <Lightbulb className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2 flex-wrap">
-                    <span>{parsedIdeas.length || numIdeas} Replika Video Viral & Hashtag SIAP PAKAI</span>
-                    {activeModelUsed && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 font-mono text-slate-600 border border-slate-200">
-                        {activeModelUsed}
-                      </span>
-                    )}
-                  </h3>
-                  <p className="text-xs text-slate-500">Pilih ide replika terbaik, salin prompt per segmen, caption & hashtag langsung untuk diposting</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
-                {/* View Mode Toggle */}
-                <div className="p-1 bg-slate-100 border border-slate-200 rounded-xl flex items-center text-xs font-semibold">
-                  <button
-                    onClick={() => setViewMode('cards')}
-                    className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
-                      viewMode === 'cards' ? 'bg-[#5b50e5] text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    <Layers className="w-3.5 h-3.5" />
-                    <span>Kartu Per Ide</span>
-                  </button>
-                  <button
-                    onClick={() => setViewMode('raw')}
-                    className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
-                      viewMode === 'raw' ? 'bg-[#5b50e5] text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    <ListFilter className="w-3.5 h-3.5" />
-                    <span>Markdown Lengkap</span>
-                  </button>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={downloadAllIdeasAsTxt}
-                  className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer"
-                  title="Unduh semua ide sebagai file teks .txt"
-                >
-                  <Download className="w-3.5 h-3.5 text-cyan-600" />
-                  <span>Unduh (.TXT)</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={copyAllIdeas}
-                  className="px-3.5 py-2 rounded-xl bg-[#5b50e5] hover:bg-[#4b40d5] text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer"
-                >
-                  {copiedAll ? <Check className="w-4 h-4 text-emerald-300" /> : <Copy className="w-4 h-4" />}
-                  <span>{copiedAll ? 'Tersalin!' : 'Salin Semua'}</span>
-                </button>
-              </div>
-            </div>
-
-            {/* AEO Synthetic Query Fan-Out Overview Banner */}
-            {viewMode === 'cards' && aeoOverview && aeoOverview.syntheticQueries.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="p-5 rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white shadow-md space-y-3"
-              >
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="p-1.5 rounded-lg bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
-                      <Cpu className="w-4 h-4 text-cyan-300" />
-                    </span>
-                    <h4 className="text-xs sm:text-sm font-bold tracking-wide uppercase text-indigo-200">
-                      AEO Synthetic Query Fan-Out (AI Search Engine Targeting)
-                    </h4>
-                  </div>
-                </div>
-
-                <p className="text-xs text-slate-300">
-                  Kueri sintetis long-tail hasil sintesis AEO Agent Engine untuk memicu sitasi penuh pada LLM Search:
-                </p>
-
-                <div className="flex flex-wrap gap-2 pt-1">
-                  {aeoOverview.syntheticQueries.map((q, idx) => (
-                    <span key={idx} className="text-xs font-mono bg-white/10 hover:bg-white/15 text-indigo-100 px-3 py-1 rounded-xl border border-white/10 flex items-center gap-1.5 transition-colors">
-                      <Sparkles className="w-3 h-3 text-amber-300 shrink-0" />
-                      <span>{q}</span>
-                    </span>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-
-            {/* View Mode 1: Individual Parsed Idea Cards */}
-            {viewMode === 'cards' && parsedIdeas.length > 0 ? (
-              <div className="grid grid-cols-1 gap-6">
-                {parsedIdeas.map((idea) => (
-                  <motion.div
-                    key={idea.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idea.id * 0.05 }}
-                    className="bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-7 space-y-5 hover:border-slate-300 transition-all shadow-sm relative overflow-hidden"
-                  >
-                    {/* Top Decorative Indicator */}
-                    <div className="absolute top-0 left-0 right-0 h-1 bg-[#5b50e5]" />
-
-                    {/* Card Header & Main Action Bar */}
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
-                      <div className="flex items-center gap-3">
-                        <span className="w-9 h-9 rounded-2xl bg-indigo-50 text-[#5b50e5] border border-indigo-100 flex items-center justify-center font-bold text-base shadow-2xs">
-                          #{idea.id}
-                        </span>
-                        <div>
-                          <h4 className="text-base sm:text-lg font-bold text-slate-900 leading-tight">
-                            {idea.title}
-                          </h4>
-                          <div className="flex items-center gap-2 mt-1 flex-wrap text-[11px] font-medium text-slate-500">
-                            <span className="px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-1">
-                              <Clock className="w-3 h-3 text-amber-600" /> Durasi: {maxDuration}s
-                            </span>
-                            <span className="px-2 py-0.5 rounded-md bg-cyan-50 text-cyan-800 border border-cyan-200 flex items-center gap-1">
-                              <Scissors className="w-3 h-3 text-cyan-600" /> Klip: {segmentDuration === 'auto' ? 'Otomatis' : `${segmentDuration}s`}
-                            </span>
-                            <span className="px-2 py-0.5 rounded-md bg-pink-50 text-pink-800 border border-pink-200 flex items-center gap-1 uppercase">
-                              <Video className="w-3 h-3 text-pink-600" /> AI: {targetAI}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => downloadIdeaAsTxt(idea)}
-                          className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-xs font-semibold text-slate-700 transition-all flex items-center gap-1.5 cursor-pointer"
-                          title="Unduh paket ide ini sebagai file .txt"
-                        >
-                          <Download className="w-3.5 h-3.5 text-cyan-600" />
-                          <span>Unduh .TXT</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => copyIdea(idea)}
-                          className="px-3.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-xs font-bold text-[#5b50e5] transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer"
-                          title="Salin seluruh konsep ide ini"
-                        >
-                          {copiedIdeaId === idea.id ? (
-                            <Check className="w-3.5 h-3.5 text-emerald-600" />
-                          ) : (
-                            <Copy className="w-3.5 h-3.5 text-[#5b50e5]" />
-                          )}
-                          <span>{copiedIdeaId === idea.id ? 'Tersalin' : 'Salin Paket Ide'}</span>
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Meta info grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                      {idea.typeAndAngle && (
-                        <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
-                          <span className="text-[10px] uppercase font-bold text-indigo-700 flex items-center gap-1 tracking-wider">
-                            <Target className="w-3.5 h-3.5 text-[#5b50e5]" /> Tipe & Angle Konten
-                          </span>
-                          <p className="text-slate-800 font-medium leading-relaxed">{idea.typeAndAngle}</p>
-                        </div>
-                      )}
-
-                      {idea.targetAudience && (
-                        <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
-                          <span className="text-[10px] uppercase font-bold text-emerald-700 flex items-center gap-1 tracking-wider">
-                            <Megaphone className="w-3.5 h-3.5 text-emerald-600" /> Target Audience
-                          </span>
-                          <p className="text-slate-800 font-medium leading-relaxed">{idea.targetAudience}</p>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* AEO Mapping & Alasan Relevansi */}
-                    {(idea.aeoQueryMapping || idea.alasanRelevansi) && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                        {idea.aeoQueryMapping && (
-                          <div className="p-3.5 rounded-xl bg-indigo-50/50 border border-indigo-200/50 space-y-1">
-                            <span className="text-[10px] uppercase font-bold text-indigo-800 flex items-center gap-1 tracking-wider">
-                              <Search className="w-3.5 h-3.5 text-indigo-500" /> AEO Query Mapping
-                            </span>
-                            <p className="text-indigo-950 font-medium leading-relaxed">{idea.aeoQueryMapping}</p>
-                          </div>
-                        )}
-                        {idea.alasanRelevansi && (
-                          <div className="p-3.5 rounded-xl bg-amber-50/50 border border-amber-200/50 space-y-1">
-                            <span className="text-[10px] uppercase font-bold text-amber-800 flex items-center gap-1 tracking-wider">
-                              <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Alasan Relevansi
-                            </span>
-                            <p className="text-amber-950 font-medium leading-relaxed">{idea.alasanRelevansi}</p>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* AEO Atomic Answer Summary & Consensus Trigger */}
-                    {(idea.atomicAnswerSummary || idea.consensusTrigger) && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                        {idea.atomicAnswerSummary && (
-                          <div className="p-3.5 rounded-xl bg-cyan-50/80 border border-cyan-200 space-y-1">
-                            <span className="text-[10px] uppercase font-bold text-cyan-900 flex items-center gap-1 tracking-wider">
-                              <Cpu className="w-3.5 h-3.5 text-cyan-600" /> Atomic Answer Summary (LLM Citation Ready)
-                            </span>
-                            <p className="text-cyan-950 font-medium leading-relaxed">{idea.atomicAnswerSummary}</p>
-                          </div>
-                        )}
-                        {idea.consensusTrigger && (
-                          <div className="p-3.5 rounded-xl bg-purple-50/80 border border-purple-200 space-y-1">
-                            <span className="text-[10px] uppercase font-bold text-purple-900 flex items-center gap-1 tracking-wider">
-                              <Share2 className="w-3.5 h-3.5 text-purple-600" /> Consensus Trigger (Tier 2 Validation)
-                            </span>
-                            <p className="text-purple-950 font-medium leading-relaxed">{idea.consensusTrigger}</p>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Hook 3 Detik */}
-                    {idea.hook && (
-                      <div className="p-4 rounded-xl bg-amber-50 border border-amber-200/80 text-xs space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] uppercase font-bold text-amber-800 flex items-center gap-1.5 tracking-wider">
-                            <Flame className="w-4 h-4 text-amber-600 animate-pulse" /> Hook Pikat (3 Detik Pertama Video)
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => copyHookOnly(idea)}
-                            className="px-2.5 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 border border-amber-300 text-amber-900 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
-                          >
-                            {copiedHookId === idea.id ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-amber-700" />}
-                            <span>{copiedHookId === idea.id ? 'Tersalin' : 'Salin Hook'}</span>
-                          </button>
-                        </div>
-                        <p className="text-amber-950 font-bold italic text-sm sm:text-base leading-snug">
-                          "{idea.hook}"
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Visual & Audio Guide */}
-                    {idea.visualAudioGuide && (
-                      <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 text-xs space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] uppercase font-bold text-purple-700 flex items-center gap-1.5 tracking-wider">
-                            <Video className="w-4 h-4 text-purple-600" /> Panduan Visual & Audio
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => copyVisualOnly(idea)}
-                            className="px-2.5 py-1 rounded-lg bg-purple-100 hover:bg-purple-200 border border-purple-200 text-purple-900 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
-                          >
-                            {copiedVisualId === idea.id ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-purple-700" />}
-                            <span>{copiedVisualId === idea.id ? 'Tersalin' : 'Salin Panduan'}</span>
-                          </button>
-                        </div>
-                        <p className="text-slate-800 leading-relaxed font-sans">
-                          {idea.visualAudioGuide}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Scene / Segment Split Prompts (Kartu Per-Klip Terpisah) */}
-                    {idea.scenePrompts && (
-                      <div className="p-4 sm:p-5 rounded-2xl bg-cyan-50/50 border border-cyan-200 space-y-4">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pb-2 border-b border-cyan-200/80">
-                          <div className="flex items-center gap-2">
-                            <span className="p-1.5 rounded-lg bg-cyan-100 text-cyan-700 border border-cyan-200">
-                              <Scissors className="w-4 h-4" />
-                            </span>
-                            <div>
-                              <h5 className="text-xs font-bold text-cyan-900 uppercase tracking-wider">
-                                Rincian Adegan Video & Prompt AI per Segmen
-                              </h5>
-                              <span className="text-[11px] text-slate-600 font-medium">
-                                Total {maxDuration}s • {idea.clips.length > 0 ? `${idea.clips.length} Klip Segmen` : `Segmen ${segmentDuration}s`}
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-2 flex-wrap self-end sm:self-auto">
-                            {onSendToPhotoPrompt && idea.clips.length > 0 && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setBatchModalData({
-                                    conceptTitle: idea.title,
-                                    clips: idea.clips.map(c => ({
-                                      id: c.id,
-                                      title: c.title,
-                                      timeRange: c.timeRange,
-                                      actionAndVO: c.actionAndVO,
-                                      aiPrompt: c.aiPrompt,
-                                    })),
-                                  });
-                                  setIsBatchPhotoModalOpen(true);
-                                }}
-                                className="px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm shadow-purple-500/20 active:scale-95 cursor-pointer"
-                                title="Pilih rasio aspek dan generate seluruh prompt foto untuk semua klip dalam ide ini sekaligus"
-                              >
-                                <Camera className="w-3.5 h-3.5 text-purple-200" />
-                                <span>📸 Generate Semua Prompt Foto ({idea.clips.length} Klip)</span>
-                              </button>
-                            )}
-
-                            <button
-                              type="button"
-                              onClick={() => copyScenesOnly(idea)}
-                              className="px-3 py-1.5 rounded-xl bg-cyan-100 hover:bg-cyan-200 border border-cyan-300 text-cyan-900 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
-                              title="Salin seluruh prompt adegan ide ini sekaligus"
-                            >
-                              {copiedScenesId === idea.id ? (
-                                <Check className="w-3.5 h-3.5 text-emerald-600" />
-                              ) : (
-                                <Copy className="w-3.5 h-3.5 text-cyan-700" />
-                              )}
-                              <span>{copiedScenesId === idea.id ? 'Tersalin' : 'Salin Semua Klip'}</span>
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Kartu per-klip terpisah */}
-                        {idea.clips.length > 0 ? (
-                          <div className="grid grid-cols-1 gap-3.5 pt-1">
-                            {idea.clips.map((clip) => {
-                              const clipKey = `${idea.id}_${clip.id}`;
-                              const isCopied = copiedClipKey === clipKey;
-
-                              return (
-                                <div
-                                  key={clip.id}
-                                  className="p-3.5 sm:p-4 rounded-xl bg-white border border-cyan-200/80 hover:border-cyan-400 transition-all space-y-2.5 relative group shadow-2xs"
-                                >
-                                  {/* Clip Card Header */}
-                                  <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2">
-                                    <div className="flex items-center gap-2">
-                                      <span className="px-2 py-0.5 rounded-md bg-cyan-100 text-cyan-800 font-mono font-bold text-[11px] border border-cyan-200">
-                                        [{clip.timeRange}]
-                                      </span>
-                                      <span className="text-xs font-bold text-slate-900">
-                                        {clip.title}
-                                      </span>
-                                    </div>
-
-                                    <div className="flex items-center gap-1.5">
-                                      {onSendToPhotoPrompt && clip.aiPrompt && (
-                                        <button
-                                          type="button"
-                                          onClick={() => {
-                                            let promptToPass = `Visual adegan klip [${clip.timeRange}]: ${clip.aiPrompt}`;
-                                            const negMatch = clip.aiPrompt.match(/\[Negative Prompt\]:\s*([\s\S]*?)(?=\n\[|$)/i);
-                                            let negPrompt = '';
-                                            if (negMatch && negMatch[1]) {
-                                              negPrompt = negMatch[1].trim();
-                                              promptToPass += `\n\nNegative Prompt: ${negPrompt}`;
-                                            }
-                                            onSendToPhotoPrompt(promptToPass, {
-                                              negativePrompt: negPrompt || undefined,
-                                              referenceImage: refImageFile || undefined
-                                            });
-                                          }}
-                                          className="px-2 py-1 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 text-[11px] font-semibold flex items-center gap-1 transition-all cursor-pointer"
-                                          title="Kirim deskripsi visual klip ini ke Generator Prompt Foto"
-                                        >
-                                          <Camera className="w-3 h-3 text-purple-600" />
-                                          <span className="hidden sm:inline">Ke Prompt Foto</span>
-                                        </button>
-                                      )}
-
-                                      <button
-                                        type="button"
-                                        onClick={() => copyClipOnly(idea.id, clip)}
-                                        className="px-2.5 py-1 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
-                                        title="Salin prompt klip ini siap paste ke AI Video"
-                                      >
-                                        {isCopied ? <Check className="w-3.5 h-3.5 text-white" /> : <Copy className="w-3.5 h-3.5 text-white" />}
-                                        <span>{isCopied ? 'Tersalin' : 'Salin Prompt Klip'}</span>
-                                      </button>
-                                    </div>
-                                  </div>
-
-                                  {/* PROMPT AI VIDEO SIAP SALIN (UTAMA) */}
-                                  {clip.aiPrompt ? (
-                                    <div className="space-y-1.5">
-                                      <span className="text-[10px] uppercase font-bold text-cyan-800 flex items-center gap-1.5 tracking-wider">
-                                        <Wand2 className="w-3.5 h-3.5 text-cyan-600" /> PROMPT AI VIDEO SIAP SALIN ({clip.timeRange}) - {targetAI.toUpperCase()}:
-                                      </span>
-                                      <div className="p-3.5 rounded-xl bg-slate-900 text-cyan-300 font-mono text-[11px] sm:text-xs overflow-x-auto whitespace-pre-wrap leading-relaxed relative border border-slate-800 selection:bg-cyan-900 selection:text-white shadow-inner">
-                                        {clip.aiPrompt}
-                                      </div>
-                                    </div>
-                                  ) : clip.actionAndVO ? (
-                                    <div className="text-xs space-y-1">
-                                      <span className="text-[10px] uppercase font-bold text-slate-500 flex items-center gap-1 tracking-wider">
-                                        <MessageSquare className="w-3 h-3 text-amber-600" /> Aksi & Dialog / Voice-Over:
-                                      </span>
-                                      <p className="text-slate-800 leading-relaxed bg-slate-50 p-2.5 rounded-lg border border-slate-200/80 font-sans">
-                                        {clip.actionAndVO}
-                                      </p>
-                                    </div>
-                                  ) : null}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        ) : (
-                          <div className="markdown-body text-xs text-slate-800 leading-relaxed font-sans space-y-2">
-                            <ReactMarkdown>{idea.scenePrompts}</ReactMarkdown>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Caption Relevan */}
-                    {idea.caption && (
-                      <div className="p-4 sm:p-5 rounded-2xl bg-emerald-50/60 border border-emerald-200 space-y-2.5">
-                        <div className="flex items-center justify-between pb-2 border-b border-emerald-200/80">
-                          <span className="text-xs font-bold text-emerald-900 flex items-center gap-1.5 uppercase tracking-wider">
-                            <MessageSquare className="w-4 h-4 text-emerald-600" /> Caption Relevan Persuasif
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => copyCaptionOnly(idea)}
-                            className="px-3 py-1 rounded-xl bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 text-emerald-900 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
-                          >
-                            {copiedCaptionId === idea.id ? (
-                              <Check className="w-3.5 h-3.5 text-emerald-600" />
-                            ) : (
-                              <Copy className="w-3.5 h-3.5 text-emerald-700" />
-                            )}
-                            <span>{copiedCaptionId === idea.id ? 'Tersalin' : 'Salin Caption'}</span>
-                          </button>
-                        </div>
-                        <p className="text-xs sm:text-sm text-slate-800 leading-relaxed whitespace-pre-line font-sans">
-                          {idea.caption}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Hashtags Relevan */}
-                    {idea.hashtags && (
-                      <div className="p-4 rounded-xl bg-indigo-50/60 border border-indigo-200 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-indigo-900 flex items-center gap-1.5 uppercase tracking-wider">
-                            <Hash className="w-4 h-4 text-[#5b50e5]" /> Hashtag Relevan High-Traffic
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => copyHashtagsOnly(idea)}
-                            className="px-2.5 py-1 rounded-lg bg-indigo-100 hover:bg-indigo-200 border border-indigo-200 text-indigo-900 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
-                          >
-                            {copiedHashtagsId === idea.id ? (
-                              <Check className="w-3.5 h-3.5 text-emerald-600" />
-                            ) : (
-                              <Copy className="w-3.5 h-3.5 text-[#5b50e5]" />
-                            )}
-                            <span>{copiedHashtagsId === idea.id ? 'Tersalin' : 'Salin Hashtag'}</span>
-                          </button>
-                        </div>
-                        <p className="text-xs text-[#5b50e5] font-mono leading-relaxed font-semibold">
-                          {idea.hashtags}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Bottom Cross-Tool Action Footer */}
-                    <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-                      <button
-                        type="button"
-                        onClick={() => downloadIdeaAsTxt(idea)}
-                        className="text-slate-500 hover:text-slate-900 transition-colors flex items-center gap-1.5 font-medium cursor-pointer"
-                      >
-                        <Download className="w-3.5 h-3.5 text-amber-600" />
-                        <span>Simpan Ide #{idea.id} sebagai file .txt</span>
-                      </button>
-
-                      {onSendToPhotoPrompt && (
-                        <button
-                          type="button"
-                          onClick={() => onSendToPhotoPrompt(`Foto thumbnail / adegan video untuk ide: ${idea.title}. ${idea.visualAudioGuide}`)}
-                          className="text-purple-700 hover:text-purple-900 transition-colors flex items-center gap-1.5 font-bold cursor-pointer"
-                        >
-                          <Camera className="w-3.5 h-3.5 text-purple-600" />
-                          <span>Buat Prompt Foto Thumbnail dari Ide Ini →</span>
-                        </button>
-                      )}
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            ) : (
-              /* View Mode 2: Full Markdown View */
-              <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm">
-                <div className="markdown-body text-slate-800 text-xs sm:text-sm leading-relaxed space-y-4">
-                  <ReactMarkdown>{rawResult}</ReactMarkdown>
-                </div>
-              </div>
-            )}
+            <ViralReplicaOutputView
+              parsedIdeas={parsedIdeas}
+              rawResult={rawResult}
+              targetAI={targetAI}
+              segmentDuration={segmentDuration}
+              maxDuration={maxDuration}
+              refImageFile={refImageFile}
+              onSendToPhotoPrompt={onSendToPhotoPrompt}
+              onOpenBatchPhotoModal={(data) => {
+                setBatchModalData(data);
+                setIsBatchPhotoModalOpen(true);
+              }}
+            />
           </motion.div>
         ) : null}
       </AnimatePresence>

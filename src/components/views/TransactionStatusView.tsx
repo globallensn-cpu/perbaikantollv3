@@ -86,7 +86,8 @@ export default function TransactionStatusView({
         }
       }
     });
-    const interval = setInterval(refresh, 2000);
+    // Polling cadangan jika SSE terputus (10 detik)
+    const interval = setInterval(refresh, 10000);
 
     return () => {
       unsubscribeTrx();
